@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% import 'bootstrap_wtf.html' as wtf %}
+
+{% block content %}
+
+<h1 > Sign in</h1>
+<form action ="{{ url_for('auth.login') }}" method = "POST">
+    {{ form.hidden_tag()}}
+    {{wtf.form_field(form.username)}}
+    {{wtf.form_field(form.password)}}
+    {{wtf.form_field(form.remember_me)}}
+    {{wtf.form_field(form.submit)}}
+
+</form>
+
+New User?  <a href="{{url_for('auth.register')}}"> Click to register!</a>
+{% endblock %}

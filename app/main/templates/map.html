@@ -1,0 +1,327 @@
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive Map</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+      crossorigin="anonymous"
+    />
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        align-items: center;
+        justify-content: center;
+        background-color: #f9f9f9;
+      }
+    </style>
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-expand-lg navbar-dark"
+      style="background-color: #ac2b37"
+    >
+      <div class="container">
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            {% if not current_user.is_anonymous %}
+            <li class="nav-item border border-light px-2 ms-2 rounded-item">
+              <a
+                class="nav-link"
+                style="color: white"
+                aria-current="page"
+                href="{{ url_for('main.index') }}"
+                >Dashboard</a
+              >
+            </li>
+            <li class="nav-item border border-light px-2 ms-2 rounded-item">
+              <a
+                class="nav-link"
+                style="color: white"
+                aria-current="page"
+                href="{{ url_for('main.postsmile') }}"
+                >Post Found Item</a
+              >
+            </li>
+            <li class="nav-item border border-light px-2 ms-2 rounded-item">
+              <a
+                class="nav-link"
+                style="color: white"
+                aria-current="page"
+                href="{{ url_for('main.map') }}"
+                >Lost And Found Map</a
+              >
+            </li>
+            <li class="nav-item border border-light px-2 ms-2 rounded-item">
+              <a
+                class="nav-link"
+                style="color: white"
+                aria-current="page"
+                href="https://fs28.formsite.com/webteamwpiedu/lost-and-found/index.html?1574433553570="
+                >Police Form</a
+              >
+            </li>
+            {% endif %}
+          </ul>
+          <ul class="navbar-nav mb-2 mb-lg-0">
+            {% if current_user.is_anonymous %}
+            <li class="nav-item border border-light px-2 ms-2 rounded-item">
+              <a
+                class="nav-link"
+                style="color: white"
+                aria-current="page"
+                href="{{ url_for('auth.register') }}"
+                >Register</a
+              >
+            </li>
+            <li class="nav-item border border-light px-2 ms-2 rounded-item">
+              <a
+                class="nav-link"
+                style="color: white"
+                aria-current="page"
+                href="{{ url_for('auth.login') }}"
+                >Login</a
+              >
+            </li>
+            {% else %}
+            <li class="nav-item border border-light px-2 ms-2 rounded-item">
+              <a
+                class="nav-link"
+                style="color: white"
+                aria-current="page"
+                href="{{ url_for('auth.logout') }}"
+                >Logout</a
+              >
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <h1 style="text-align: center; margin-top: 10px">WPI Map</h1>
+    <p style="text-align: center; margin-top: 10px; margin-bottom: 20px">
+      Please choose the building you want to know the Lost And Found spot
+    </p>
+    <br />
+    <div
+      class="container d-flex justify-content-center align-items-center"
+      style="height: calc(100vh - 56px)"
+    >
+      <img
+        src="{{ url_for('static', filename='img/map.png') }}"
+        alt="Map"
+        usemap="#image-map"
+        id="map-image"
+        style="
+          border: 5px solid #000000;
+          border-radius: 10px;
+          margin: 20px;
+          width: 90%;
+        "
+      />
+
+      <map name="image-map">
+        <area
+          target=""
+          alt="Rec center"
+          title="Rec center"
+          href="{{ url_for('main.map_building', building_id = 14) }}"
+          coords="323,348,319,375,186,559,266,615,283,584,365,586,379,525,384,464,403,473,419,452,384,425,394,359"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Morgan Dining Hall"
+          title="Morgan Dining Hall"
+          href="{{ url_for('main.map_building', building_id = 13) }}"
+          coords="273,754,294,757,320,761,510,784,522,750,384,722,335,677,331,638,306,625,197,708,190,735"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Harrington"
+          title="Harrington"
+          href="{{ url_for('main.map_building', building_id = 15) }}"
+          coords="428,332,418,373,420,432,488,458,572,454,587,398,590,356"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Innovation"
+          title="Innovation"
+          href="{{ url_for('main.map_building', building_id = 12) }}"
+          coords="636,374,752,391,728,489,621,470"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Campus Center"
+          title="Campus Center"
+          href="{{ url_for('main.map_building', building_id = 9) }}"
+          coords="789,347,757,360,652,350,655,333,698,335,702,292,750,290,779,233,786,197,841,202,826,313"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Higgin Lab"
+          title="Higgin Lab"
+          href="{{ url_for('main.map_building', building_id = 6) }}"
+          coords="768,424,752,520,769,520,757,550,847,567,856,542,831,531,841,448,871,450,874,416,806,404"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Alden Memorial"
+          title="Alden Memorial"
+          href="{{ url_for('main.map_building', building_id = 1) }}"
+          coords="762,710,807,716,801,787,839,791,840,805,801,803,792,818,741,817"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Stratton Hall"
+          title="Stratton Hall"
+          href="{{ url_for('main.map_building', building_id = 11) }}"
+          coords="926,521,911,608,953,620,964,525"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Olin Hall"
+          title="Olin Hall"
+          href="{{ url_for('main.map_building', building_id = 8) }}"
+          coords="868,163,846,323,882,337,889,325,895,299,917,168"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Salisbury Lab"
+          title="Salisbury Lab"
+          href="{{ url_for('main.map_building', building_id = 10) }}"
+          coords="1044,333,1049,275,1123,285,1113,345,1099,422,1058,418,1056,395,996,385,1002,334"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Atwater Kent Lab"
+          title="Atwater Kent Lab"
+          href="{{ url_for('main.map_building', building_id = 2) }} "
+          coords="1037,83,1081,97,1066,136,1120,163,1143,139,1178,156,1136,238,1108,229,1098,242,1010,193,1019,171,993,162"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Fuller Lab"
+          title="Fuller Lab"
+          href="{{ url_for('main.map_building', building_id = 3) }}"
+          coords="1147,249,1169,239,1162,219,1226,186,1273,263,1179,303"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Gordon Library"
+          title="Gordon Library"
+          href="{{ url_for('main.map_building', building_id = 4) }}"
+          coords="1178,405,1158,469,1159,528,1231,542,1248,411"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Unity Hall"
+          title="Unity Hall"
+          href="{{ url_for('main.map_building', building_id = 16) }}"
+          coords="1201,600,1149,588,1148,621,1200,649,1312,663,1317,582,1208,567"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="The field"
+          title="The field"
+          href="{{ url_for('main.map_building', building_id = 18) }}"
+          coords="0,730,28,744,285,389,105,270,0,419"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Stoddard Lab"
+          title="Stoddard Lab"
+          href="{{ url_for('main.map_building', building_id = 19) }}"
+          coords="1001,472,1094,487,1084,522,996,508"
+          shape="poly"
+        />
+        <area
+          target=""
+          alt="Ballete Center"
+          title="Ballete Center"
+          href="{{ url_for('main.map_building', building_id = 17) }}"
+          coords="644,567,634,659,687,666,700,568"
+          shape="poly"
+        />
+      </map>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const img = document.querySelector("#map-image");
+        const map = document.querySelector("map");
+        let originalWidth, originalHeight;
+
+        // Wait for the image to load
+        img.addEventListener("load", () => {
+          originalWidth = img.naturalWidth;
+          originalHeight = img.naturalHeight;
+          scaleMap(); // Scale map on initial load
+        });
+
+        function scaleMap() {
+          // Get the current width and height of the image in the document
+          const imgWidth = img.offsetWidth;
+          const imgHeight = img.offsetHeight;
+
+          // Calculate the scaling factors
+          const scaleX = imgWidth / originalWidth;
+          const scaleY = imgHeight / originalHeight;
+
+          // Scale the coordinates of all the clickable areas
+          map.querySelectorAll("area").forEach((area) => {
+            const coords = area.getAttribute("coords").split(",").map(Number);
+            const newCoords = coords.map((coord, index) =>
+              index % 2 === 0
+                ? Math.round(coord * scaleX)
+                : Math.round(coord * scaleY)
+            );
+            area.setAttribute("coords", newCoords.join(","));
+          });
+        }
+
+        // Trigger scaling of the map whenever the window is resized
+        window.addEventListener("resize", scaleMap);
+      });
+    </script>
+  </body>
+</html>
+{% endblock %}

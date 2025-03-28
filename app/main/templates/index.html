@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <h1 style = "text-align: center;margin-top: 70px;">Welcome to Wpi Lost And Found Portal</h1>
+</br>
+    <!-- TODO: (milestone1) Format posts -->
+    <div class="postlist">
+        <div class="post_top_bar">
+            <form class="sort" method="GET" action="{{ url_for('main.index') }}">
+                <div class="form-group">
+                    <label for="sort_by">{{ form.color_filter.label }}</label>
+                    {{ form.color_filter(class="form-select") }}
+                    <label for="sort_by">{{ form.building_filter.label }}</label>
+                    {{ form.building_filter(class="form-select") }}
+                    {{ form.submit(class="button") }}
+                    {{ form.submit2(class="button button2")}}
+
+                </div>
+            </form>
+        </div>
+        
+        
+        
+    </br>    
+        {% for post in posts %}
+            <!-- Container for each individual post -->
+            <div class="post-box">
+                {% include '_post.html' %}
+            </div>
+        {% endfor %}
+    </div>
+  
+{% endblock %}

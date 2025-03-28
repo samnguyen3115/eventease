@@ -1,0 +1,173 @@
+[
+  {
+    "building_id": 1,
+    "count": 1,
+    "name": "Alden Memorial",
+    "title": ["Alden Memorial"],
+    "body": ["Description for Alden Memorial."],
+    "image_link": ["https://example.com/images/alden_memorial.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 2,
+    "count": 1,
+    "name": "Atwater Kent Lab",
+    "title": ["Atwater Kent Lab"],
+    "body": ["Description for Atwater Kent Lab."],
+    "image_link": ["https://example.com/images/atwater_kent_lab.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 3,
+    "count": 1,
+    "name": "Fuller Lab",
+    "title": ["Fuller Lab"],
+    "body": ["Description for Fuller Lab."],
+    "image_link": ["https://example.com/images/fuller_lab.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 4,
+    "count": 1,
+    "name": "Gordon Library",
+    "title": ["Gordon Library"],
+    "body": ["Description for Gordon Library."],
+    "image_link": ["https://example.com/images/gordon_library.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 5,
+    "count": 1,
+    "name": "Goddard Hall",
+    "title": ["Goddard Hall"],
+    "body": ["Description for Goddard Hall."],
+    "image_link": ["https://example.com/images/goddard_hall.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 6,
+    "count": 1,
+    "name": "Higgins Lab",
+    "title": ["Higgins Lab"],
+    "body": ["Description for Higgins Lab."],
+    "image_link": ["https://example.com/images/higgins_lab.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 7,
+    "count": 1,
+    "name": "Kaven Hall",
+    "title": ["Kaven Hall"],
+    "body": ["Description for Kaven Hall."],
+    "image_link": ["https://example.com/images/kaven_hall.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 8,
+    "count": 1,
+    "name": "Olin Hall",
+    "title": ["Olin Hall"],
+    "body": ["Description for Olin Hall."],
+    "image_link": ["https://example.com/images/olin_hall.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 9,
+    "count": 1,
+    "name": "Rubin Campus Center",
+    "title": ["Rubin Campus Center"],
+    "body": ["Description for Campus Center."],
+    "image_link": ["https://example.com/images/campus_center.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 10,
+    "count": 1,
+    "name": "Salisbury Lab",
+    "title": ["Salisbury Lab"],
+    "body": ["Description for Salisbury Lab."],
+    "image_link": ["https://example.com/images/salisbury_lab.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 11,
+    "count": 1,
+    "name": "Stratton Lab",
+    "title": ["Stratton Lab"],
+    "body": ["Description for Stratton Lab."],
+    "image_link": ["https://example.com/images/stratton_lab.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 12,
+    "count": 2,
+    "name": "Innovation Studio",
+    "title": ["Front Desk","Small table next to the Makerspace"],
+    "body": ["Description for Innovation Studio."],
+    "image_link": ["img/building/inno_1.jpg","img/building/inno_2.jpg"],
+    "theme_image_link": "img/building/inno_theme.png"
+  },
+  {
+    "building_id": 13,
+    "count": 1,
+    "name": "Morgan Dining Hall",
+    "title": ["Morgan Dining Hall"],
+    "body": ["Description for Morgan Dining Hall."],
+    "image_link": ["https://example.com/images/morgan_dining_hall.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 14,
+    "count": 2,
+    "name": "Sports & Recreation Center",
+    "title": ["The front desk","Storage room in the indoor courts"],
+    "body": ["You can ask the front desk for help.","Sometimes the storage room is locked."],
+    "image_link": ["https://example.com/images/sports_recreation_center.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 15,
+    "count": 1,
+    "name": "Harrington Auditorium",
+    "title": ["Harrington Auditorium"],
+    "body": ["Description for Harrington Auditorium."],
+    "image_link": ["https://example.com/images/harrington_auditorium.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 16,
+    "count": 1,
+    "name": "Unity Hall",
+    "title": ["Unity Hall"],
+    "body": ["Description for Unity Hall."],
+    "image_link": ["https://example.com/images/unity_hall.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 17,
+    "count": 1,
+    "name": "Bartlett Center",
+    "title": ["Bartlett Center"],
+    "body": ["Description for Bartlett Center."],
+    "image_link": ["https://example.com/images/bartlett_center.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 18,
+    "count": 1,
+    "name": "The Field",
+    "title": ["The Field"],
+    "body": ["Description for The Field."],
+    "image_link": ["https://example.com/images/the_field.jpg"],
+    "theme_image_link": ""
+  },
+  {
+    "building_id": 19,
+    "count": 1,
+    "name": "Stoddard Lab",
+    "title": ["Stoddard Lab"],
+    "body": ["Description for The Field."],
+    "image_link": ["https://example.com/images/the_field.jpg"],
+    "theme_image_link": ""
+  }
+]

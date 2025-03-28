@@ -1,0 +1,15 @@
+Flask==3.0.3
+Flask-Bootstrap==3.3.7.1
+Flask-Login==0.6.3
+Flask-Moment==1.0.6
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7
+Flask-WTF==1.2.1
+Jinja2==3.1.4
+Werkzeug==3.0.3
+WTForms==3.1.2
+WTForms-SQLAlchemy==0.4.1
+email-validator==2.1.1
+pytest==8.2.2
+python-dotenv==1.0.1
+psycopg2==2.9.10

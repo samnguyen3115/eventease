@@ -1,0 +1,330 @@
+body {
+    margin: 1px 1px 1px 15px;
+    padding: 1px;
+    font-family: Tahoma;
+    text-align: left;
+  
+}
+
+
+
+.rounded-item {
+    border-radius: 10px;
+}
+.navbar{
+    margin-top: -5px;
+    margin-left: -20px;
+    
+}
+.flash-container{
+    background-color: crimson;
+}
+a:hover {
+	color:#2387D9;
+}
+
+
+
+.posttable { 
+    width : 100%;
+    margin: 0px;
+}
+
+.posttitle {
+    font-size: 1.4em;
+    text-align: center;
+    font-weight: light bold;
+    color: #ffffff;
+    background-color: #c23745; 
+    margin-bottom: 8px;
+    padding: 10px;
+    border-radius: 8px 8px 0 0; 
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    border: 2px solid #c23745; 
+}
+
+.postbody {
+    font-size: 1.2em;
+    text-align: center;
+    color: #333;
+    padding: 5px;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+
+.posttimestamp {
+    text-align: center;
+    font-size: 15px;
+    font-style: italic;
+    margin: 10px;
+    padding: 10px;
+}
+
+.useritem{
+    text-align: center;
+    padding: 3px;
+    margin: 4px 3px 4px 3px;
+    color: crimson; 
+    text-transform: uppercase;
+}
+
+.create-post{
+    border : 1px solid black;
+    padding: 10px;
+    border-radius: 10px;
+    align-items: center;
+}
+
+
+.flash-container {
+    margin-top:40px;
+    margin: 0 auto;
+    width: 100%;
+    height: 50px;
+    text-align: center;
+    padding: 10px;
+    background-color: #f6f6f6;
+    border: 1px solid #f6f6f6;
+    color: #333;
+    font-style: italic;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin: auto;
+}
+
+.formtitle {
+    width: 60%;
+    height: 30px;
+    text-align: left;
+    font-size: 18px;
+    font-weight: bold;
+    font-style: italic;
+    margin: 10px;
+    padding: 10px;
+}
+
+.formbody {
+    width: 60%;
+    height: 240px;
+    text-align: left;
+    font-size: 24px;
+    font-weight: italic;
+    font-style: italic;
+    margin: 10px;
+    padding: 10px;
+}
+.form-group {
+    margin: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Space between label and select */
+}
+
+.button{
+    border:1px solid white;
+    border-radius:5px;
+    background-color: #ffd23e;
+    color:black;
+    padding: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.button2{
+    align-self: right;
+    
+}
+.button:hover{
+    background-color: #ffbf3e;
+}
+.left-side, .right-side {
+    flex: 1; /* Makes both sides take up equal space */
+}
+
+.submit-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.formselect {
+    width: 100%;
+    height: 30px;
+    text-align: left;
+    font-size: 18px;
+    font-weight: bold;
+    font-style: italic;
+    margin: 10px;
+    padding: 10px;
+}
+
+.postlist {
+    flex-wrap: wrap;
+    border: #333 1px solid;
+    border-radius: 10px;
+}
+
+.post_top_bar{
+    width : 100%;
+    background-color: #ac2b37;
+    color: white;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+.sort{
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid black;
+}
+.tagitem{
+    display: inline-block;   
+    text-align: center;
+    padding: 4px;
+    border: 0.5px solid black;
+    background-color: rgb(242, 248, 159);
+    border-radius: 10px;
+    margin: 4px; 
+}
+
+.form-select {
+    width: 50%;
+    max-width: 150px;
+    max-height: 40px;
+    padding: 5px;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    color: #333;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    appearance: none; 
+    outline: none; 
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.form-select::after {
+    content: '▼';
+    font-size: 10px;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.form-select:hover,
+.form-select:focus {
+    border-color: #007bff;
+    background-color: #e6f2ff;
+}
+
+.form-select option {
+    padding: 8px;
+    color: #333;
+    background-color: #fff;
+}
+
+.post-image{
+    max-width: 70%; 
+    height: auto;
+    border-radius: 8px;
+    
+}
+
+.places-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Space between places */
+    padding: 20px; /* Padding around the container to prevent content from touching the borders */
+    border-radius: 10px;
+}
+
+.content-container {
+    width: 100%;
+    display: flex;
+    justify-content: space-between; /* Space between text and image */
+    gap: 20px; /* Space between text and image */
+    background-color: #f0f0ef;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+
+}
+
+.text-content {
+    flex: 2; /* 40% width */
+    max-width: 40%; /* Ensure text content doesn’t exceed 40% */
+}
+
+.image-content {
+    flex: 3; /* 60% width */
+    max-width: 60%; /* Ensure image content doesn’t exceed 60% */
+    padding-left: 10px; /* Add a little padding for spacing */
+}
+
+.image-content img {
+    width: 100%; /* Ensure image scales to its container */
+    height: auto; /* Maintain aspect ratio */
+    border: 1px solid black; /* Add a border for styling */
+    border-radius: 5px; /* Rounded corners for the image */
+}
+
+
+
+@media screen and (min-width:1200px) {
+    .post-box {
+        display: flex;
+        background-color: white;
+        width: 90%;
+        margin: auto;
+        padding: 0%;
+        border:black solid 1px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease; 
+        overflow: hidden; 
+
+
+    }
+}
+
+@media screen and (min-width: 800px) and (max-width:1200px) {
+    .post-box {
+        display: flex;
+        vertical-align: middle;
+        background-color: white;
+        width: 90%;
+        margin: auto;
+        padding: 0%;
+        border:black solid 1px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        overflow: hidden; 
+
+
+    }
+}
+
+@media screen and (max-width:800px) {
+    .post-box {
+        display: flex;
+        vertical-align: middle;
+        background-color: white;
+        width: 99%;
+        margin: auto;
+        padding: 0%;
+        padding-top: 10px;
+        border:black solid 1px;
+        margin-bottom: 10px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease; 
+        overflow: hidden; 
+
+
+    }
+}

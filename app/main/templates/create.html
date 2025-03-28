@@ -1,0 +1,47 @@
+{% extends "base.html" %} {% import 'bootstrap_wtf.html' as wtf %} {% block
+content %}
+
+<h1 style="text-align: center">What did you find?</h1>
+
+{% if form %}
+<div class="create-post">
+  <form action="" method="post" enctype="multipart/form-data">
+    {{ form.hidden_tag() }} {{wtf.form_field(form.title)}} {% if
+    form.title.errors %}
+    <ul class="error-messages">
+      {% for error in form.title.errors %}
+      <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %} {{wtf.form_field(form.body)}} {% if form.body.errors %}
+    <ul class="error-messages">
+      {% for error in form.body.errors %}
+      <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    <div class="form-group">
+      <div class="left-side">
+        <label for="color_tag">{{ form.color_tag.label }}</label><br />
+        {{ form.color_tag(class="form-select") }}
+      </div>
+
+      <div class="right-side">
+        <label for="building_tag">{{ form.building_tag.label }}</label><br />
+        {{ form.building_tag(class="form-select") }}
+      </div>
+    </div>
+
+    <div style="margin-top:10px; flex-direction: column;display: flex;flex-wrap: wrap;">
+      {{ form.image.label }}
+      {{ form.image }}<br />
+    </div>
+    <div>
+      {{ form.submit(class="btn btn-danger", style="margin-top: 10px; display:
+      block; margin-left: auto; margin-right: auto;") }}
+    </div>
+  </form>
+</div>
+
+{% endif %} {% endblock %}

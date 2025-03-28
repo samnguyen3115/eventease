@@ -1,0 +1,54 @@
+<table id="post-{{post.id}}" class="posttable" style="width: 100%" valign="top">
+  <tr>
+    <td colspan="3">
+      <div class="posttitle">{{post.title}}</div>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="3">
+      <div class="postbody">{{post.description}}</div>
+    </td>
+  </tr>
+  
+    <td colspan="3" style="text-align: center" valign="bottom">
+      <br />
+      <!-- Display Color Tags -->
+      <span class="tagitem">{{ post.color_tag.name }}</span>
+      
+      <!-- Display Building Tags -->
+      <span class="tagitem">{{ post.building_tag.name }}</span>
+
+  </td>
+  <tr >
+    <td >
+      <div style="width: 100%; display: flex; justify-content: center; margin-left: auto; margin-right: auto;">
+        {% if post.image %}
+          <img
+            src="{{ url_for('main.get_image', post_id=post.id) }}"
+            alt="Post Image"
+            class="post-image"
+          />
+        {% else %}
+          <p>No image available for this post.</p>
+        {% endif %}
+      </div>
+      <br />
+      <div class="posttimestamp" style = "display: block;">
+        Posted at: {{ post.timestamp.strftime('%A, %d %B %Y') }}
+
+
+      </div>
+    </td>
+  </tr>
+  
+  <tr>
+    <td colspan="3" style="text-align: center" valign="bottom">
+      <br />
+      <span class="useritem">Posted By {{post.writer.username}}</span>
+    </td>
+  </tr>
+</table>
+
+{% block script %} 
+
+{% endblock %}

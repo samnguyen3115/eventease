@@ -1,0 +1,17 @@
+<div class="event-card">
+    <h2 class="event-name">{{ event.name }}</h2>
+    <p class="event-date"><strong>Date:</strong> {{ event.date.strftime('%Y-%m-%d') }}</p>
+
+    <h3 class="tasks-title">Top Tasks:</h3>
+    <ul class="tasks-list">
+        {% for task in event.tasks[:3] %}
+            <li class="task-item">
+                <label class="task-label">
+                    <input type="checkbox" name="task_ids" value="{{ task.id }}" {% if task.completed %}checked{% endif %}>
+                    <span class="task-text">{{ task.description }}</span>
+                </label>
+            </li>
+        {% endfor %}
+    </ul>
+    <button type="button" class="view-details-button" onclick="window.location.href='{{ url_for('main.checklist_detail', event_id=event.id) }}'">View Details</button>
+</div>

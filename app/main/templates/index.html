@@ -1,34 +1,145 @@
 {% extends "base.html" %}
 
 {% block content %}
+    <h1 style="text-align: center; margin-top: 20px;">Event Dashboard</h1>
+    <div class="event-grid">
+        {% for event in events %}
+            <div class="event-card" onclick="openCard(this, {{ event.id }})">
+                <h2 class="event-name">{{ event.name }}</h2>
+                <p class="event-date"><strong>Date:</strong> {{ event.date.strftime('%Y-%m-%d') }}</p>
 
-    <h1 style = "text-align: center;margin-top: 70px;">Welcome to Wpi Lost And Found Portal</h1>
-</br>
-    <!-- TODO: (milestone1) Format posts -->
-    <div class="postlist">
-        <div class="post_top_bar">
-            <form class="sort" method="GET" action="{{ url_for('main.index') }}">
-                <div class="form-group">
-                    <label for="sort_by">{{ form.color_filter.label }}</label>
-                    {{ form.color_filter(class="form-select") }}
-                    <label for="sort_by">{{ form.building_filter.label }}</label>
-                    {{ form.building_filter(class="form-select") }}
-                    {{ form.submit(class="button") }}
-                    {{ form.submit2(class="button button2")}}
-
-                </div>
-            </form>
-        </div>
-        
-        
-        
-    </br>    
-        {% for post in posts %}
-            <!-- Container for each individual post -->
-            <div class="post-box">
-                {% include '_post.html' %}
+                <h3 class="tasks-title">Top Tasks:</h3>
+                <ul class="tasks-list">
+                    {% for task in event.tasks[:3] %}
+                        <li class="task-item">
+                            <label class="task-label">
+                                <input type="checkbox" name="task_ids" value="{{ task.id }}" {% if task.completed %}checked{% endif %}>
+                                <span class="task-text">{{ task.description }}</span>
+                            </label>
+                        </li>
+                    {% endfor %}
+                </ul>
             </div>
         {% endfor %}
     </div>
-  
+
+    <!-- Overlay for the floating card -->
+    <div id="overlay" class="overlay" onclick="closeCard()"></div>
+    <script>
+        let expandedCard = null;
+
+        // Open the card and transform it into a floating page
+        function openCard(card, eventId) {
+            if (expandedCard) return; // Prevent multiple cards from being expanded
+
+            // Save the original content of the card
+            card.dataset.originalContent = card.innerHTML;
+
+            // Add the "expanded" class to the clicked card
+            card.classList.add('expanded');
+            expandedCard = card;
+
+            // Show the overlay
+            const overlay = document.getElementById('overlay');
+            overlay.classList.add('active');
+
+            // Load additional content dynamically (e.g., via AJAX)
+            fetch(`/get_event/${eventId}`)
+                .then(response => response.text())
+                .then(data => {
+                    card.innerHTML = data; // Replace the card content with the expanded content
+                    initializeProgressBar(card); // Initialize the progress bar
+                    initializeCheckboxListeners(card); // Add listeners to checkboxes
+                });
+        }
+
+        // Close the expanded card and return it to its original size
+        function closeCard() {
+            if (!expandedCard) return;
+
+            // Synchronize the task states with the original small card
+            const originalContent = document.createElement('div');
+            originalContent.innerHTML = expandedCard.dataset.originalContent;
+
+            const originalCheckboxes = originalContent.querySelectorAll('input[type="checkbox"]');
+            const expandedCheckboxes = expandedCard.querySelectorAll('input[type="checkbox"]');
+
+            expandedCheckboxes.forEach((checkbox, index) => {
+                if (originalCheckboxes[index]) {
+                    originalCheckboxes[index].checked = checkbox.checked;
+                }
+            });
+
+            // Restore the original content of the card
+            expandedCard.innerHTML = originalContent.innerHTML;
+
+            // Update the small card dynamically
+            const smallCardCheckboxes = expandedCard.querySelectorAll('input[type="checkbox"]');
+            smallCardCheckboxes.forEach((checkbox, index) => {
+                if (expandedCheckboxes[index]) {
+                    checkbox.checked = expandedCheckboxes[index].checked;
+                }
+            });
+
+            // Remove the "expanded" class from the card
+            expandedCard.classList.remove('expanded');
+            expandedCard = null;
+
+            // Hide the overlay
+            const overlay = document.getElementById('overlay');
+            overlay.classList.remove('active');
+        }
+
+        // Initialize the progress bar
+        function initializeProgressBar(card) {
+            const checkboxes = card.querySelectorAll('input[type="checkbox"]');
+            const progressBarFill = card.querySelector('.progress-bar-fill');
+
+            // Update the progress bar when checkboxes are toggled
+            checkboxes.forEach((checkbox) => {
+                checkbox.addEventListener('change', () => updateProgressBar(card));
+            });
+
+            // Initialize the progress bar
+            updateProgressBar(card);
+        }
+
+        // Update the progress bar
+        function updateProgressBar(card) {
+            const checkboxes = card.querySelectorAll('input[type="checkbox"]');
+            const checked = card.querySelectorAll('input[type="checkbox"]:checked');
+            const progress = Math.round((checked.length / checkboxes.length) * 100);
+
+            const progressBarFill = card.querySelector('.progress-bar-fill');
+            progressBarFill.style.width = `${progress}%`;
+        }
+
+        // Initialize checkbox listeners to save changes
+        function initializeCheckboxListeners(card) {
+            const checkboxes = card.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach((checkbox) => {
+                checkbox.addEventListener('change', () => {
+                    const taskId = checkbox.value;
+                    const completed = checkbox.checked;
+
+                    // Send an AJAX request to update the task status
+                    fetch(`/update_task/${taskId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ completed: completed }),
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            console.error('Failed to update task status');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                });
+            });
+        }
+    </script>
 {% endblock %}

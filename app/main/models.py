@@ -1,26 +1,23 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 from app import db, login
 import sqlalchemy as sqla
 import sqlalchemy.orm as sqlo
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
-from sqlalchemy.dialects.postgresql import ARRAY
 
-
+# @login.user_loader
 @login.user_loader
 def load_user(id):
     return db.session.get(User, int(id))
 
-
-# Association Table for Tags and Posts
-postTags = db.Table(
-    'postTags',
+# Association Table for Task Assignments (Many-to-Many: Users <-> Tasks)
+task_assignments = db.Table(
+    'task_assignments',
     db.metadata,
-    sqla.Column('post_id', sqla.Integer, sqla.ForeignKey('post.id', ondelete='CASCADE'), primary_key=True),
-    sqla.Column('tag_id', sqla.Integer, sqla.ForeignKey('tag.id', ondelete='CASCADE'), primary_key=True)
+    sqla.Column('user_id', sqla.Integer, sqla.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True),
+    sqla.Column('task_id', sqla.Integer, sqla.ForeignKey('task.id', ondelete='CASCADE'), primary_key=True)
 )
-
 
 # User Model
 class User(UserMixin, db.Model):
@@ -28,7 +25,8 @@ class User(UserMixin, db.Model):
     username: sqlo.Mapped[str] = sqlo.mapped_column(sqla.String(64), unique=True, nullable=False)
     email: sqlo.Mapped[str] = sqlo.mapped_column(sqla.String(120), unique=True, nullable=False)
     password_hash: sqlo.Mapped[Optional[str]] = sqlo.mapped_column(sqla.String(256))
-    posts: sqlo.WriteOnlyMapped[list["Post"]] = sqlo.relationship("Post", back_populates='writer', cascade="all, delete-orphan")
+    events: sqlo.WriteOnlyMapped[list["Event"]] = sqlo.relationship("Event", back_populates="user", cascade="all, delete-orphan")
+    tasks: sqlo.WriteOnlyMapped[list["Task"]] = sqlo.relationship("Task", secondary=task_assignments, back_populates="assigned_users")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -38,79 +36,35 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return f"<User id={self.id} username={self.username}>"
-    
-    def get_user_posts(self):
-        return db.session.execute(self.posts.select().order_by(Post.timestamp.desc())).scalars().all()
 
+# Event Model
+from sqlalchemy.orm import relationship
 
-
-# Tag Model
-class Tag(db.Model):
-    id: sqlo.Mapped[int] = sqlo.mapped_column(primary_key=True)
-    name: sqlo.Mapped[str] = sqlo.mapped_column(sqla.String(50), unique=True, nullable=False)
-    category: sqlo.Mapped[str] = sqlo.mapped_column(sqla.String(20), nullable=False)  # e.g., "color" or "building"
-
-    def __repr__(self):
-        return f"<Tag id={self.id} name={self.name} category={self.category}>"
-
-
-# Post Model
-class Post(db.Model):
-    id: sqlo.Mapped[int] = sqlo.mapped_column(primary_key=True)
-    userid: sqlo.Mapped[int] = sqlo.mapped_column(sqla.ForeignKey(User.id, ondelete="CASCADE"), index=True)
-    title: sqlo.Mapped[str] = sqlo.mapped_column(sqla.String(150), nullable=False)
-    description: sqlo.Mapped[str] = sqlo.mapped_column(sqla.String(1500), nullable=False)
-    timestamp: sqlo.Mapped[Optional[datetime]] = sqlo.mapped_column(default=lambda: datetime.now(timezone.utc))
-
-    # Relationships for color and building tags
-    color_tag_id: sqlo.Mapped[int] = sqlo.mapped_column(sqla.ForeignKey('tag.id'), nullable=False)
-    color_tag: sqlo.Mapped["Tag"] = sqlo.relationship(
-        "Tag",
-        foreign_keys=[color_tag_id],
-        primaryjoin="and_(Post.color_tag_id == Tag.id, Tag.category == 'color')",
-        lazy="joined"
-    )
-
-    building_tag_id: sqlo.Mapped[int] = sqlo.mapped_column(sqla.ForeignKey('tag.id'), nullable=False)
-    building_tag: sqlo.Mapped["Tag"] = sqlo.relationship(
-        "Tag",
-        foreign_keys=[building_tag_id],
-        primaryjoin="and_(Post.building_tag_id == Tag.id, Tag.category == 'building')",
-        lazy="joined"
-    )
-
-    writer: sqlo.Mapped["User"] = sqlo.relationship("User", back_populates="posts")
-    image = db.relationship('ImageStore', backref='post', uselist=False)
-
-    def __repr__(self):
-        return f"<Post id={self.id} title={self.title}>"
-
-
-# Image Store Model
-class ImageStore(db.Model):
+class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id', ondelete='CASCADE'), nullable=False)
-    image_data = db.Column(db.LargeBinary, nullable=False)
-    image_type = db.Column(db.String(50), nullable=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(500), nullable=True)
+    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"))
+    user = db.relationship("User", back_populates="events")
+    tasks = db.relationship("Task", back_populates="event", cascade="all, delete-orphan")
 
-class Building(db.Model):
-    building_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
-    count = db.Column(db.Integer)
-    title = db.Column(ARRAY(db.String(200)))
-    body = db.Column(ARRAY(db.String(200)))
-    theme_image_link = db.Column(db.String(50))
-    image_link = db.Column(ARRAY(db.String(50)))
-    
-    def get_name(self):
-        return self.name
-    def get_count(self):
-        return self.count
-    def get_place(self):
-        return self.title
-    def get_body(self):
-        return self.body
-    def get_image(self):
-        return self.image_link
-    def get_theme(self):
-        return self.theme_image_link
+    def __repr__(self):
+        return f"<Event id={self.id} name={self.name}>"
+
+# Task Model
+class Task(db.Model):
+    id: sqlo.Mapped[int] = sqlo.mapped_column(primary_key=True)
+    description: sqlo.Mapped[str] = sqlo.mapped_column(sqla.String(255), nullable=False)
+    completed: sqlo.Mapped[bool] = sqlo.mapped_column(sqla.Boolean, default=False)
+    priority: sqlo.Mapped[int] = sqlo.mapped_column(sqla.Integer, nullable=False)  # Task priority (e.g., 1=Low, 2=Medium, 3=High)
+    due_date: sqlo.Mapped[Optional[datetime]] = sqlo.mapped_column(sqla.DateTime, nullable=True)  # Optional due date
+    event_id: sqlo.Mapped[int] = sqlo.mapped_column(sqla.Integer, sqla.ForeignKey('event.id', ondelete="CASCADE"))
+    event: sqlo.Mapped["Event"] = sqlo.relationship("Event", back_populates="tasks")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    assigned_users: sqlo.WriteOnlyMapped[list["User"]] = sqlo.relationship("User", secondary=task_assignments, back_populates="tasks")
+
+    def __repr__(self):
+        return f"<Task id={self.id} description={self.description[:20]} priority={self.priority} due_date={self.due_date} completed={self.completed}>"
+

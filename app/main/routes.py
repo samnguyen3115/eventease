@@ -1,120 +1,230 @@
-import io
-import mimetypes
-import sys
-from flask import Response, abort, render_template, flash, redirect, send_file, url_for, request,jsonify
-from flask_login import current_user, login_required
-from sqlalchemy.orm import selectinload
-import sqlalchemy as sqla
-
+import json
+import re
+from flask import render_template, request, jsonify, flash, redirect, url_for
+import google.generativeai as genai
+import os
 from app import db
-from app.main.models import Post,Tag, postTags, ImageStore,Building
-from app.main.forms import PostForm, FilterForm
-
+from flask_login import current_user
+from app.main.models import Event, Task
 from app.main import main_blueprint as bp_main
+import sqlalchemy as sqla
+from sqlalchemy.orm import joinedload
 
-@bp_main.route('/', methods=['GET'])
-@bp_main.route('/index', methods=['GET','POST'])
-@login_required
-def index(): 
-    form = FilterForm()
-    color_filter = request.args.get('color_filter')
-    building_filter = request.args.get('building_filter')
-    form.color_filter.data = color_filter  
-    form.building_filter.data = building_filter
-    print(f"Color Filter: {color_filter}")
-    print(f"Building Filter: {building_filter}")
-    # Start building the query for all posts ordered by timestamp
-    query = db.session.scalars(sqla.select(Post).order_by(Post.timestamp.desc()))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
-    # If there is a color filter, add the condition to filter based on the color tag's name
-    if color_filter and color_filter != '':
-        if  building_filter and building_filter != '':
-            query = db.session.scalars(sqla.select(Post).where(sqla.and_(Post.color_tag_id == color_filter , Post.building_tag_id == building_filter)))
+@bp_main.route('/')
+@bp_main.route('/index')
+def index():
+    # Query all events and their associated tasks
+    events = db.session.scalars(
+        sqla.select(Event).options(joinedload(Event.tasks))
+    ).unique().all()  # Ensure unique results
+
+    # Pass the events (with tasks) to the template
+    return render_template('index.html', title="Event Portal", events=events)
+
+@bp_main.route('/chatbot', methods=['GET', 'POST'])
+def chatbot():
+    return render_template('chatbot.html', title="Event Chatbot")
+
+@bp_main.route('/create_event', methods=['POST'])
+def create_event():
+    data = request.json
+    event_name = data.get('eventName')
+    user_id = current_user.id
+
+    if not event_name:
+        return jsonify({"error": "Event name is required."}), 400
+
+    new_event = Event(name=event_name, user_id=user_id)
+    db.session.add(new_event)
+    db.session.commit()
+
+    return jsonify({"eventId": new_event.id})
+
+@bp_main.route('/create_event_and_tasks', methods=['POST'])
+def create_event_and_tasks():
+    data = request.json
+    user_input = data.get('userInput')
+    event_id = data.get('event_id')
+    conversation_history = data.get('conversation_history', [])
+    question_index = data.get('question_index', 0)
+
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({"error": "Event not found."}), 404
+
+    try:
+        if not conversation_history:
+            # Initial prompt, ask the first clarifying question
+            prompt = f"""
+            Based on the following event description: "{user_input}", ask ONE clarifying question to help me generate a more specific checklist.
+            Return ONLY the question.
+            """
         else:
-            query = db.session.scalars(sqla.select(Post).where(Post.color_tag_id == color_filter ))
-    else:
-       if(building_filter) and building_filter != '':
-            query = db.session.scalars(sqla.select(Post).where(Post.building_tag_id == building_filter))
+            if question_index < 2:
+                # Ask a follow-up question
+                prompt = f"""
+                Based on the following conversation:
+                {conversation_history}
+                Ask ONE more clarifying question. Return ONLY the question.
+                """
+            else:
+                # Generate the checklist after all questions are answered
+                prompt = f"""
+                Based on the following conversation:
+                {conversation_history}
+                Generate a JSON checklist. Include keys for 'task', 'priority' (1:important/2:necessary/3:normal).
 
+                Example JSON output:
+                [
+                    {{"task": "Book flights", "priority": 1}},
+                    {{"task": "Pack sunscreen", "priority": 2}}
+                ]
 
-    refresh = request.args.get('submit2')
-    if refresh:
-        query = db.session.scalars(sqla.select(Post).order_by(Post.timestamp.desc()))
+                Return ONLY the JSON. Do not include any other text or explanations, and do not wrap the JSON in markdown code blocks.
+                """
 
-     # Execute the query to get the filtered posts
-    all_posts = query.all()
-    if not all_posts:
-        flash('No posts found with the selected filters')
-        all_posts = db.session.scalars(sqla.select(Post).order_by(Post.timestamp.desc())).all()   
-    
-    # Render the page with the filtered posts
-    return render_template('index.html', title="Lost And Found Portal", posts=all_posts, form=form)
+        response = model.generate_content(prompt)
+        response_text = response.text.strip()
 
+        if not conversation_history or question_index < 2:
+            # Return a question
+            return jsonify({"question": response_text, "conversation_history": conversation_history + [f"User: {user_input}", f"Bot: {response_text}"], "question_index": question_index + 1})
+        else:
+            # Return tasks
+            json_match = re.search(r"```json\s*([\s\S]*?)\s*```", response_text)
+            if json_match:
+                response_text = json_match.group(1).strip()
 
-@bp_main.route('/post', methods=['GET', 'POST'])
-@login_required
-def postsmile():
-    form = PostForm()
-    if form.validate_on_submit():
-        post = Post(writer = current_user,
-                    title=form.title.data,
-                    color_tag=form.color_tag.data,
-                    building_tag=form.building_tag.data,
-                    description=form.body.data)
-        db.session.add(post)
-        db.session.commit()
-        if form.image.data:
-            image_file = form.image.data
-            image_data = image_file.read()  # Read the file data as binary
-            image_type = mimetypes.guess_type(image_file.filename)[0]  # Guess the MIME type based on file extension
-            image = ImageStore(post_id=post.id, image_data=image_data, image_type=image_type)
-            db.session.add(image)
+            tasks_data = json.loads(response_text)
+
+            for task_data in tasks_data:
+                task = Task(
+                    description=task_data.get('task', 'No description provided'),
+                    priority=task_data.get('priority', 3),
+                    event_id=event_id
+                )
+                db.session.add(task)
+
             db.session.commit()
-        flash('Your new smile post is created')
-        return redirect(url_for('main.index'))
-    return render_template('create.html', title='Post', form=form)
+            return jsonify({"eventId": event_id, "message": "Tasks created successfully!"})
 
-@bp_main.route('/image/<int:post_id>')
-def get_image(post_id):
-    image_record = db.session.query(ImageStore).filter_by(post_id=post_id).first()
-    if image_record is None or image_record.image_data is None:
-        abort(404)
-    return Response(image_record.image_data, mimetype=image_record.image_type or 'image/jpeg')
+    except json.JSONDecodeError as e:
+        db.session.rollback()
+        return jsonify({"error": f"Invalid JSON response from Gemini API: {e}. The response was: {response_text}"}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Error creating tasks: {e}"}), 500
 
+@bp_main.route('/chat', methods=['POST'])
+def chat():
+    data = request.json
+    user_input = data.get('message')
+    event_id = data.get('event_id')
 
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({"error": "Event not found."}), 404
 
-@bp_main.route('/post/<post_id>/delete', methods=['POST'])
-@login_required
-def delete_post(post_id):
-    post = db.session.scalars(sqla.select(Post).where(Post.id == post_id)).first()
-    if post:
-        tags = db.session.scalars(sqla.select(Tag).join(Post.tags).where(Post.id == post_id))
-        for tag in tags:
-            post.tags.remove(tag)
+    prompt = f"""
+    Generate a JSON checklist for the following event: {user_input}.
+    Include keys for 'task', 'priority' (1:important/2:necessary/3:normal).
+
+    Example JSON output:
+    [
+        {{"task": "Book flights", "priority": 1}},
+        {{"task": "Pack sunscreen", "priority": 2}}
+    ]
+
+    Return ONLY the JSON. Do not include any other text or explanations, and do not wrap the JSON in markdown code blocks.
+    """
+    try:
+        response = model.generate_content(prompt)
+        response_text = response.text.strip()
+
+        json_match = re.search(r"```json\s*([\s\S]*?)\s*```", response_text)
+        if json_match:
+            response_text = json_match.group(1).strip()
+
+        tasks_data = json.loads(response_text)
+
+        for task_data in tasks_data:
+            task = Task(
+                description=task_data.get('task', 'No description provided'),
+                priority=task_data.get('priority', 3),
+                event_id=event_id
+            )
+            db.session.add(task)
+
+        db.session.commit()
+        return jsonify({"response": "Tasks saved to the database successfully!"})
+
+    except json.JSONDecodeError as e:
+        db.session.rollback()
+        return jsonify({"error": f"Invalid JSON response from Gemini API: {e}. The response was: {response_text}"}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Error saving tasks to the database: {e}"}), 500
+    
+@bp_main.route('/update_tasks/<int:event_id>', methods=['POST'])    
+def update_tasks(event_id):
+    # Get the list of task IDs that were checked
+    checked_task_ids = request.form.getlist('task_ids')
+
+    # Get all tasks for the event
+    tasks = db.session.scalars(sqla.select(Task).where(Task.event_id == event_id)).all()
+
+    # Update the completion status of each task
+    for task in tasks:
+        task.completed = str(task.id) in checked_task_ids
+
+    # Commit the changes to the database
     db.session.commit()
-    db.session.delete(post)
-    db.session.commit()
-    flash('The post and its tags have been successfully deleted.')
+
+    flash("Tasks updated successfully!", "success")
     return redirect(url_for('main.index'))
 
+@bp_main.route('/checklist_detail/<int:event_id>', methods=['GET', 'POST'])
+def checklist_detail(event_id):
+    # Get the event and its tasks
+    event = db.session.scalars(sqla.select(Event).where(Event.id == event_id)).first()
+    if not event:
+        return jsonify({"error": "Event not found."}), 404
 
+    # Fetch tasks sorted by priority
+    tasks = db.session.scalars(
+        sqla.select(Task).where(Task.event_id == event_id).order_by(Task.priority.asc())
+    ).all()
 
-@bp_main.route('/map', methods=['GET'])
-@login_required
-def map():
-    return render_template('map.html', title='Map')
+    return render_template('checklist.html', event=event, tasks=tasks)
 
-@bp_main.route('/building/<building_id>', methods=['GET'])
-@login_required
-def map_building(building_id):
-    building = db.session.get(Building, building_id)
-    name = building.get_name()
-    place = building.get_place()
-    body = building.get_body()
-    count = building.get_count()
-    theme = building.get_theme()
-    image = building.get_image()
-    places_info = zip(place, body, image)
-    return render_template('building.html', title='Map', building_id=building_id, name=name, place=place, body=body, count=count, theme=theme, image=image,places_info=places_info)
+@bp_main.route('/get_event/<int:event_id>')
+def get_event(event_id):
+    # Get the event
+    event = db.session.get(Event, event_id)
+    if not event:
+        return "Event not found", 404
 
+    # Fetch tasks sorted by priority
+    tasks = db.session.scalars(
+        sqla.select(Task).where(Task.event_id == event_id).order_by(Task.priority.asc())
+    ).all()
 
+    return render_template('checklist.html', event=event, tasks=tasks)
+
+@bp_main.route('/update_task/<int:task_id>', methods=['POST'])
+def update_task(task_id):
+    data = request.json
+    completed = data.get('completed')
+
+    # Find the task and update its completion status
+    task = db.session.get(Task, task_id)
+    if not task:
+        return jsonify({"error": "Task not found"}), 404
+
+    task.completed = completed
+    db.session.commit()
+
+    return jsonify({"success": True})

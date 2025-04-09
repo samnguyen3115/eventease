@@ -1,349 +1,641 @@
 /* General Styles */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
-    margin: 0;
-    padding: 0;
+  font-family: "Segoe UI Variable", "Segoe UI", Tahoma, Geneva, Verdana,
+    sans-serif;
+  background: linear-gradient(
+    135deg,
+    #292929,
+    #042f7e
+  ); /* Fluent Design gradient background */
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: #ffffff; /* White text for contrast */
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
-/* Chatbot Wrapper */
+
+/* Chatbox Wrapper with Fluent Design */
 #chat-wrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100vh;
-    max-width: 800px;
-    margin: 0 auto;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    background-color: #f9f9f9;
-    overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 80vh;
+  width: 90%;
+  max-width: 90%;
+  margin: 20px auto; /* Add spacing from the navbar */
+  overflow: hidden;
+  background: rgba(44, 42, 42, 0.541); /* Semi-transparent background */
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+  backdrop-filter: blur(20px); /* Frosted glass effect */
+  -webkit-backdrop-filter: blur(20px); /* Frosted glass effect for Safari */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Light border for contrast */
 }
 
-/* Chat Header */
+/* Chat Header with Fluent Design */
 #chat-header {
-    background-color: #007bff;
-    color: white;
-    padding: 15px;
-    text-align: center;
-    font-size: 20px;
-    font-weight: bold;
+  background: rgb(31, 55, 96); /* Semi-transparent blue */
+  color: rgb(211, 227, 253);
+  text-align: center;
+  font-size: 20px;
+  padding: 5px;
+  border-bottom: 1px solid rgba(77, 76, 76, 0.3); /* Light border for separation */
+  text-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.2); /* Subtle text shadow */
+}
+.modal {
+  position: fixed;
+  overflow: auto;
+  /* Ensure the modal is above other elements */
+}
+.modal-open {
+  overflow: auto !important; /* Ensure the body remains scrollable */
+  padding-right: 0 !important;
 }
 
-/* Chat Container */
+.modal-backdrop {
+  position: absolute; /* Prevent the backdrop from blocking scrolling */
+}
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+}
+/* Chat Container with Fluent Design */
 #chat-container {
-    flex: 1;
-    padding: 15px;
-    overflow-y: auto;
-    background-color: #ffffff;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(27, 28, 29, 0.281); /* Semi-transparent background */
+  box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle inner shadow */
+  backdrop-filter: blur(10px); /* Frosted glass effect */
+  -webkit-backdrop-filter: blur(10px); /* Frosted glass effect for Safari */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Light border for contrast */
 }
 
 /* Message Bubbles */
 .message {
-    max-width: 70%;
-    padding: 10px 15px;
-    border-radius: 15px;
-    word-wrap: break-word;
-    font-size: 14px;
-    line-height: 1.5;
+  max-width: 70%;
+  padding: 10px 15px;
+  border-radius: 15px;
+  word-wrap: break-word;
+  font-size: 14px;
+  line-height: 1.5;
+  backdrop-filter: blur(5px); /* Subtle blur for message bubbles */
+  -webkit-backdrop-filter: blur(5px); /* Subtle blur for Safari */
+  transition: transform 0.2s ease, background-color 0.3s ease;
 }
 
 .message.user {
-    align-self: flex-end;
-    background-color: #007bff;
-    color: white;
-    text-align: right;
+  align-self: flex-end;
+  background: rgba(25, 48, 119, 0.712); /* Semi-transparent blue */
+  color: white;
+  text-align: left;
+  transform: translateY(0);
 }
 
 .message.bot {
-    align-self: flex-start;
-    background-color: #f1f1f1;
-    color: #333;
-    text-align: left;
+  align-self: flex-start;
+  background: rgba(51, 53, 55, 0.548); /* Semi-transparent white */
+  color: white;
+  text-align: left;
+  transform: translateY(0);
 }
 
-/* Input Container */
+.message:hover {
+  transform: scale(1.05); /* Slight zoom effect on hover */
+}
+
+/* Input Container with Fluent Design */
 #input-container {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    border-top: 1px solid #ddd;
-    background-color: #f9f9f9;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.3); /* Light border for separation */
+  background: rgb(37, 40, 46); /* Semi-transparent background */
+  backdrop-filter: blur(10px); /* Frosted glass effect */
+  -webkit-backdrop-filter: blur(10px); /* Frosted glass effect for Safari */
 }
 
+/* Chat Input Field */
 #chat-input {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-    margin-right: 10px;
+  flex: 1;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Light border */
+  border-radius: 5px;
+  font-size: 16px;
+  background: rgb(37, 40, 46); /* Semi-transparent background */
+  color: #ffffff;
+  backdrop-filter: blur(5px); /* Subtle blur for input */
+  -webkit-backdrop-filter: blur(5px); /* Subtle blur for Safari */
+  margin-right: 10px;
 }
 
+/* Chat Send Button */
 #chat-send-button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+  padding: 10px 20px;
+  background: rgba(0, 123, 255, 0.5); /* Semi-transparent blue */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 #chat-send-button:hover {
-    background-color: #0056b3;
+  background: rgba(0, 123, 255, 0.7); /* Slightly darker blue on hover */
+  transform: scale(1.05); /* Slight zoom effect */
 }
 
 /* Scrollbar Styling */
 #chat-container::-webkit-scrollbar {
-    width: 8px;
+  width: 8px;
 }
 
 #chat-container::-webkit-scrollbar-thumb {
-    background-color: #ccc;
-    border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
 }
 
 #chat-container::-webkit-scrollbar-thumb:hover {
-    background-color: #aaa;
+  background-color: rgba(255, 255, 255, 0.5);
 }
+
 /* Event Grid */
 .event-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Two cards per row */
-    gap: 20px;
-    padding: 20px;
-    justify-content: center; /* Centers the cards if there's only one */
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(300px, 1fr)
+  ); /* Two cards per row */
+  gap: 20px;
+  padding: 20px;
+  justify-content: center; /* Centers the cards if there's only one */
 }
 
 /* Event Card */
 .event-card {
-    background-color: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    padding: 15px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, width 0.3s ease, height 0.3s ease;
-    width: 100%; /* Ensures the card takes up the full width of its grid cell */
-    max-width: 400px; /* Sets a maximum width for the card */
-    margin: 0 auto; /* Centers the card horizontally */
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, width 0.3s ease,
+    height 0.3s ease;
+  width: 100%; /* Ensures the card takes up the full width of its grid cell */
+  max-width: 400px; /* Sets a maximum width for the card */
+  margin: 0 auto; /* Centers the card horizontally */
+}
+.event-card-2 {
+  background: rgb(30, 33, 34, 0.7); /* translucent dark */
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, width 0.3s ease,
+    height 0.3s ease;
+  width: 100%;
+  max-width: 90%;
+  margin: 0 auto;
+  margin-bottom: 20px;
+  color: #eaeaea;
+}
+
+.event-card-2 h2 {
+  font-size: 20px;
+  color: #fbfbfb; /* light Fluent-style accent */
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.event-card-2 p {
+  font-size: 15px;
+  color: #ccc;
+  margin-bottom: 10px;
+  text-align: center;
 }
 
 .event-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
-}
-
-/* Expanded Card */
-.event-card.expanded {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%; /* Takes up most of the screen width */
-    height: 80%; /* Takes up most of the screen height */
-    z-index: 1000; /* Ensure it floats above everything */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    overflow-y: auto; /* Allow scrolling if content overflows */
-    transition: transform 0.3s ease, width 0.3s ease, height 0.3s ease;
-}
-
-/* Overlay */
-.overlay {
-    display: none; /* Hidden by default */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    z-index: 999; /* Below the expanded card */
-}
-
-/* Show Overlay */
-.overlay.active {
-    display: block;
+  transform: scale(1.05);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
 }
 
 .event-card h2 {
-    font-size: 18px;
-    color: #007bff;
-    margin-bottom: 10px;
-    text-align: center;
+  font-size: 18px;
+  color: #007bff;
+  margin-bottom: 10px;
+  text-align: center;
 }
 
 .event-card p {
-    font-size: 14px;
-    color: #555;
-    margin-bottom: 10px;
-    text-align: center;
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 10px;
+  text-align: center;
 }
 
 /* Modal */
 .modal {
-    display: none; /* Hidden by default */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    z-index: 1000; /* Ensure it floats above everything */
-    justify-content: center;
-    align-items: center;
+  display: none; /* Hidden by default */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  z-index: 1000; /* Ensure it floats above everything */
+  justify-content: center;
+  align-items: center;
 }
 
 /* Modal Content */
 .modal-content {
-    background-color: #ffffff;
-    border-radius: 10px;
-    padding: 20px;
-    width: 90%; /* Takes up most of the screen width */
-    max-width: 800px; /* Maximum width for the expanded card */
-    height: 60%; /* Makes the modal a horizontal rectangle */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  background-color: rgb(41, 44, 45);
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%; /* Takes up most of the screen width */
+  max-width: 800px; /* Maximum width for the expanded card */
+  height: 60%; /* Makes the modal a horizontal rectangle */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 /* Close Button */
 .close-button {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 24px;
-    font-weight: bold;
-    color: #333;
-    cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
 }
 
 .close-button:hover {
-    color: #007bff;
+  color: #007bff;
 }
 
 /* Tasks Section */
 .tasks-title {
-    font-size: 16px;
-    color: #333;
-    margin-bottom: 10px;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 10px;
 }
 
 .tasks-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .task-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 5px;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-    transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  transition: background-color 0.3s ease;
 }
 
 .task-item:hover {
-    background-color: #f9f9f9;
+  background-color: rgb(41, 41, 41);
 }
 
 /* Task Label */
 .task-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
 }
 
 .task-label input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: #28a745; /* Green color for the checkbox */
-    cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: #147ded; /* Green color for the checkbox */
+  cursor: pointer;
 }
 
 /* Task Text */
 .task-text {
-    font-size: 14px;
-    color: #333;
-    transition: color 0.3s ease, text-decoration 0.3s ease, opacity 0.3s ease;
+  font-size: 14px;
+  color: #333;
+  transition: color 0.3s ease, text-decoration 0.3s ease, opacity 0.3s ease;
 }
 
 .task-label input[type="checkbox"]:checked + .task-text {
-    text-decoration: line-through;
-    color: #888;
-    opacity: 0.6;
+  text-decoration: line-through;
+  color: #888;
+  opacity: 0.6;
 }
 
 /* Task Metadata */
 .task-status {
-    font-size: 14px;
-    font-weight: bold;
+  font-size: 14px;
+  font-weight: bold;
 }
 
 .task-priority,
 .task-due-date {
-    font-size: 12px;
-    color: #888;
+  font-size: 12px;
+  color: #888;
 }
 
 /* Buttons */
 .view-details-button,
 .update-button {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 14px;
-    cursor: pointer;
-    text-align: center;
-    margin-top: 20px;
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
+  margin-top: 20px;
 }
 
 .view-details-button:hover,
 .update-button:hover {
-    background-color: #0056b3;
+  background-color: #0056b3;
 }
 
 /* Progress Bar Container */
 .progress-bar-container {
-    margin-bottom: 15px; /* Add spacing below the progress bar */
-    text-align: center;
+  margin-bottom: 15px; /* Add spacing below the progress bar */
+  text-align: center;
 }
 
 /* Progress Bar */
 .progress-bar {
-    width: 100%;
-    height: 10px;
-    background-color: #f3f3f3;
-    border-radius: 5px;
-    overflow: hidden;
-    position: relative;
+  width: 100%;
+  height: 10px;
+  background-color: #f3f3f3;
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
 }
 
 .progress-bar-fill {
-    height: 100%;
-    background-color: #28a745; /* Green color for the progress */
-    width: 0%; /* Initial width */
-    transition: width 0.3s ease;
+  height: 100%;
+  background-color: #098bf6;
+  transition: width 0.3s ease;
 }
 
 /* Progress Text */
 .progress-text {
-    font-size: 14px;
-    color: #333;
+  font-size: 14px;
+  color: #333;
+}
+/* Editable Input Field */
+.editable-input {
+  width: 100%;
+  font-size: 1.2em;
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* Navbar Styling */
+.navbar {
+  background-color: rgba(44, 44, 44, 0.78) !important; /* Blue background */
+  border-bottom: 2px solid rgb(58, 58, 58); /* Darker blue border for contrast */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar .navbar-brand {
+  color: #ffffff !important; /* White text for the brand */
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.navbar .navbar-brand:hover {
+  color: #d4e3fc !important; /* Light blue on hover */
+  text-decoration: none;
+}
+
+.navbar .nav-link {
+  color: #ffffff !important; /* White text for links */
+  font-size: 1rem;
+  margin-right: 10px;
+}
+
+.navbar .nav-link:hover {
+  color: #d4e3fc !important; /* Light blue on hover */
+  text-decoration: none;
+}
+
+.navbar .navbar-toggler {
+  border-color: #ffffff !important; /* White border for the toggler */
+}
+
+.navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba(255, 255, 255, 1)' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E") !important;
+}
+
+.navbar .nav-item .active {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+/* Center the delete button */
+.delete-form {
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  margin-top: 20px; /* Add spacing above the button */
+}
+
+.delete-form .btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
+  background: rgba(255, 14, 14, 0.5); /* Semi-transparent blue */
+  color: rgb(2, 2, 2);
+  text-align: center;
+  text-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.2);
+}
+
+.assign-user-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.assign-user-input {
+  flex: 1;
+  min-width: 200px;
+}
+#assignUserModal .modal-content {
+  color: black;
+}
+
+.fluent-button {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 8px 12px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.fluent-button img {
+  height: 100%;
+  filter: invert(100%);
+}
+
+.fluent-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.form-control::placeholder {
+  color: #aaa; /* Light gray or any color you like */
+  opacity: 1;
+}
+.fluent-checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 10px;
+}
+
+.fluent-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  background-color: rgb(48, 51, 53);
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: background-color 0.2s ease;
+}
+
+.fluent-checkbox-wrapper:hover {
+  background-color: #3a3a3a;
+}
+
+.fluent-checkbox {
+  accent-color: #0078d4; /* Fluent Blue */
+  transform: scale(1.2);
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.fluent-checkbox-label {
+  color: white;
+  font-weight: 500;
+  font-family: "Segoe UI Variable", "Segoe UI", sans-serif;
+  user-select: none;
+  cursor: pointer;
+}
+
+.task-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.assign-btn {
+  background-color: #0078d4;
+  border: none;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-wrap: wrap;
+}
+
+.user-icon-container {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+
+.user-icon {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgb(0, 0, 0);
+  cursor: pointer;
+}
+
+.user-tooltip {
+  visibility: hidden;
+  background-color: rgb(33, 52, 69);
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  padding: 4px 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-family: "Segoe UI Variable", "Segoe UI", sans-serif;
+}
+
+.user-icon-container:hover .user-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.assign-placeholder {
+  color: white;
+  font-weight: 500;
+  font-family: "Segoe UI Variable", "Segoe UI", sans-serif;
+  opacity: 0.8;
+}
+
+.edit-task-btn {
+  background-color: #0078d4;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+.assign-btn:hover,
+.edit-task-btn:hover {
+  background-color: #0078d4 !important; /* Keeps it the same on hover */
+  color: white; /* Optional: ensure text stays white */
 }

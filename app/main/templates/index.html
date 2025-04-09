@@ -1,145 +1,308 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block content %}
+<h1 style="text-align: center; margin-top: 20px">Event Dashboard</h1>
+<div class="event-grid">
+  {% for event in events %}
+  <div class="event-card" onclick="redirectToChecklist({{ event.id }})" style="background-color: rgba(41, 44, 45, 0.903); border: 0px;" >
+    <h2 class="event-name" style="font-size: 24px;color:rgb(0, 120, 212)">{{ event.name }}</h2>
+    <p class="event-date" style="color:white;">
+      <strong>Date:</strong> {{ event.date.strftime('%Y-%m-%d') }}
+    </p>
 
-{% block content %}
-    <h1 style="text-align: center; margin-top: 20px;">Event Dashboard</h1>
-    <div class="event-grid">
-        {% for event in events %}
-            <div class="event-card" onclick="openCard(this, {{ event.id }})">
-                <h2 class="event-name">{{ event.name }}</h2>
-                <p class="event-date"><strong>Date:</strong> {{ event.date.strftime('%Y-%m-%d') }}</p>
-
-                <h3 class="tasks-title">Top Tasks:</h3>
-                <ul class="tasks-list">
-                    {% for task in event.tasks[:3] %}
-                        <li class="task-item">
-                            <label class="task-label">
-                                <input type="checkbox" name="task_ids" value="{{ task.id }}" {% if task.completed %}checked{% endif %}>
-                                <span class="task-text">{{ task.description }}</span>
-                            </label>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endfor %}
+    <!-- Progress Bar -->
+    <div class="progress-bar-container">
+      <div class="progress-bar">
+        <div
+          class="progress-bar-fill"
+          style="width: {{ event.progress }}%;"
+        ></div>
+      </div>
     </div>
+  </div>
+  {% endfor %}
+</div>
+<script>
+  function redirectToChecklist(eventId) {
+    // Redirect to the checklist page for the selected event
+    window.location.href = `/checklist_detail/${eventId}`;
+  }
+</script>
+<script>
+  // Initialize the progress bar
+  function initializeProgressBar(card) {
+    const checkboxes = card.querySelectorAll('input[type="checkbox"]');
+    const progressBarFill = card.querySelector(".progress-bar-fill");
 
-    <!-- Overlay for the floating card -->
-    <div id="overlay" class="overlay" onclick="closeCard()"></div>
-    <script>
-        let expandedCard = null;
+    // Update the progress bar when checkboxes are toggled
+    checkboxes.forEach((checkbox) => {
+      checkbox.addEventListener("change", () => {
+        updateProgressBar(card);
+        saveTaskState(checkbox); // Save the checkbox state to the database
+      });
+    });
 
-        // Open the card and transform it into a floating page
-        function openCard(card, eventId) {
-            if (expandedCard) return; // Prevent multiple cards from being expanded
+    // Initialize the progress bar
+    updateProgressBar(card);
+  }
 
-            // Save the original content of the card
-            card.dataset.originalContent = card.innerHTML;
+  // Update the progress bar
+  function updateProgressBar(card) {
+    const checkboxes = card.querySelectorAll('input[type="checkbox"]');
+    const checked = card.querySelectorAll('input[type="checkbox"]:checked');
+    const progress = Math.round((checked.length / checkboxes.length) * 100);
 
-            // Add the "expanded" class to the clicked card
-            card.classList.add('expanded');
-            expandedCard = card;
+    const progressBarFill = card.querySelector(".progress-bar-fill");
+    progressBarFill.style.width = `${progress}%`;
+  }
 
-            // Show the overlay
-            const overlay = document.getElementById('overlay');
-            overlay.classList.add('active');
+  // Save the checkbox state to the database
+  function saveTaskState(checkbox) {
+    const taskId = checkbox.value;
+    const completed = checkbox.checked;
 
-            // Load additional content dynamically (e.g., via AJAX)
-            fetch(`/get_event/${eventId}`)
-                .then(response => response.text())
-                .then(data => {
-                    card.innerHTML = data; // Replace the card content with the expanded content
-                    initializeProgressBar(card); // Initialize the progress bar
-                    initializeCheckboxListeners(card); // Add listeners to checkboxes
-                });
+    // Send an AJAX request to update the task status
+    fetch(`/update_task/${taskId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ completed: completed }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          console.error("Failed to update task status");
         }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
 
-        // Close the expanded card and return it to its original size
-        function closeCard() {
-            if (!expandedCard) return;
+  // Initialize checkbox listeners
+  function initializeCheckboxListeners(card, eventId) {
+    const checkboxes = card.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach((checkbox) => {
+      checkbox.addEventListener("change", () => {
+        saveTaskState(checkbox); // Save the checkbox state to the database
+        updateProgressBar(card); // Update the progress bar dynamically
+      });
+    });
+  }
 
-            // Synchronize the task states with the original small card
-            const originalContent = document.createElement('div');
-            originalContent.innerHTML = expandedCard.dataset.originalContent;
+  // Initialize inline editing for the event name
+  function initializeEditableEventName(card, eventId) {
+    const eventNameElement = card.querySelector(".event-name");
 
-            const originalCheckboxes = originalContent.querySelectorAll('input[type="checkbox"]');
-            const expandedCheckboxes = expandedCard.querySelectorAll('input[type="checkbox"]');
+    // Add double-click event listener
+    eventNameElement.addEventListener("dblclick", () => {
+      const currentName = eventNameElement.textContent.trim();
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = currentName;
+      input.classList.add("editable-input");
 
-            expandedCheckboxes.forEach((checkbox, index) => {
-                if (originalCheckboxes[index]) {
-                    originalCheckboxes[index].checked = checkbox.checked;
-                }
+      // Replace the event name with the input field
+      eventNameElement.textContent = "";
+      eventNameElement.appendChild(input);
+      input.focus();
+
+      // Save changes when the user presses Enter or clicks outside
+      const saveChanges = () => {
+        const newName = input.value.trim();
+        if (newName && newName !== currentName) {
+          // Send an AJAX request to update the event name
+          fetch(`/update_event_name/${eventId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ name: newName }),
+          })
+            .then((response) => {
+              if (response.ok) {
+                eventNameElement.textContent = newName; // Update the UI
+              } else {
+                eventNameElement.textContent = currentName; // Revert on failure
+                console.error("Failed to update event name");
+              }
+            })
+            .catch((error) => {
+              eventNameElement.textContent = currentName; // Revert on error
+              console.error("Error:", error);
             });
+        } else {
+          eventNameElement.textContent = currentName; // Revert if no changes
+        }
+      };
 
-            // Restore the original content of the card
-            expandedCard.innerHTML = originalContent.innerHTML;
+      // Save changes on blur or Enter key
+      input.addEventListener("blur", saveChanges);
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          saveChanges();
+        }
+      });
+    });
+  }
 
-            // Update the small card dynamically
-            const smallCardCheckboxes = expandedCard.querySelectorAll('input[type="checkbox"]');
-            smallCardCheckboxes.forEach((checkbox, index) => {
-                if (expandedCheckboxes[index]) {
-                    checkbox.checked = expandedCheckboxes[index].checked;
-                }
+  // Initialize inline editing for the event date
+  function initializeEditableEventDate(card, eventId) {
+    const eventDateElement = card.querySelector(".event-date");
+
+    // Add double-click event listener
+    eventDateElement.addEventListener("dblclick", () => {
+      const currentDate = eventDateElement.textContent
+        .trim()
+        .replace("Date: ", "");
+      const input = document.createElement("input");
+      input.type = "date";
+      input.value = currentDate;
+      input.classList.add("editable-input");
+
+      // Replace the event date with the input field
+      eventDateElement.textContent = "Date: ";
+      eventDateElement.appendChild(input);
+      input.focus();
+
+      // Save changes when the user presses Enter or clicks outside
+      const saveChanges = () => {
+        const newDate = input.value.trim();
+        if (newDate && newDate !== currentDate) {
+          // Send an AJAX request to update the event date
+          fetch(`/update_event_date/${eventId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ date: newDate }),
+          })
+            .then((response) => {
+              if (response.ok) {
+                eventDateElement.textContent = `Date: ${newDate}`; // Update the UI
+              } else {
+                eventDateElement.textContent = `Date: ${currentDate}`; // Revert on failure
+                console.error("Failed to update event date");
+              }
+            })
+            .catch((error) => {
+              eventDateElement.textContent = `Date: ${currentDate}`; // Revert on error
+              console.error("Error:", error);
             });
-
-            // Remove the "expanded" class from the card
-            expandedCard.classList.remove('expanded');
-            expandedCard = null;
-
-            // Hide the overlay
-            const overlay = document.getElementById('overlay');
-            overlay.classList.remove('active');
+        } else {
+          eventDateElement.textContent = `Date: ${currentDate}`; // Revert if no changes
         }
+      };
 
-        // Initialize the progress bar
-        function initializeProgressBar(card) {
-            const checkboxes = card.querySelectorAll('input[type="checkbox"]');
-            const progressBarFill = card.querySelector('.progress-bar-fill');
-
-            // Update the progress bar when checkboxes are toggled
-            checkboxes.forEach((checkbox) => {
-                checkbox.addEventListener('change', () => updateProgressBar(card));
-            });
-
-            // Initialize the progress bar
-            updateProgressBar(card);
+      // Save changes on blur or Enter key
+      input.addEventListener("blur", saveChanges);
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          saveChanges();
         }
+      });
+    });
+  }
+  function openEditTaskModal(taskId, description, priority) {
+    // Populate the modal with task details
+    document.getElementById("editTaskId").value = taskId;
+    document.getElementById("editTaskDescription").value = description;
+    document.getElementById("editTaskPriority").value = priority;
 
-        // Update the progress bar
-        function updateProgressBar(card) {
-            const checkboxes = card.querySelectorAll('input[type="checkbox"]');
-            const checked = card.querySelectorAll('input[type="checkbox"]:checked');
-            const progress = Math.round((checked.length / checkboxes.length) * 100);
+    // Show the modal
+    $("#editTaskModal").modal("show");
+  }
 
-            const progressBarFill = card.querySelector('.progress-bar-fill');
-            progressBarFill.style.width = `${progress}%`;
+  function submitEditTask() {
+    const taskId = document.getElementById("editTaskId").value;
+    const description = document.getElementById("editTaskDescription").value;
+    const priority = document.getElementById("editTaskPriority").value;
+
+    // Send the updated task details to the server
+    fetch(`/edit_task/${taskId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        description: description,
+        priority: priority,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          alert(data.message);
+          location.reload(); // Reload the page to reflect changes
+        } else {
+          alert(data.error);
         }
+      })
+      .catch((error) => console.error("Error:", error));
+  }
 
-        // Initialize checkbox listeners to save changes
-        function initializeCheckboxListeners(card) {
-            const checkboxes = card.querySelectorAll('input[type="checkbox"]');
-            checkboxes.forEach((checkbox) => {
-                checkbox.addEventListener('change', () => {
-                    const taskId = checkbox.value;
-                    const completed = checkbox.checked;
+  function enableEditTask(taskId) {
+    // Hide the text and show the input field and priority dropdown
+    const taskText = document.getElementById(`task-text-${taskId}`);
+    const taskInput = document.getElementById(`task-input-${taskId}`);
+    const taskPriority = document.getElementById(`task-priority-${taskId}`);
+    taskText.style.display = "none";
+    taskInput.style.display = "inline-block";
+    taskPriority.style.display = "inline-block";
+    taskInput.focus();
 
-                    // Send an AJAX request to update the task status
-                    fetch(`/update_task/${taskId}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ completed: completed }),
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            console.error('Failed to update task status');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
-                });
-            });
+    // Add an event listener to save changes when Enter is pressed
+    taskInput.addEventListener("keypress", function (event) {
+      if (event.key === "Enter") {
+        saveTaskChanges(taskId);
+      }
+    });
+
+    // Add an event listener to save changes when priority is changed
+    taskPriority.addEventListener("change", function () {
+      saveTaskChanges(taskId);
+    });
+  }
+
+  function saveTaskChanges(taskId) {
+    const taskInput = document.getElementById(`task-input-${taskId}`);
+    const taskPriority = document.getElementById(`task-priority-${taskId}`);
+    const newDescription = taskInput.value;
+    const newPriority = taskPriority.value;
+
+    // Send the updated task details to the server
+    fetch(`/edit_task/${taskId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        description: newDescription,
+        priority: newPriority,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          // Update the text and hide the input field and priority dropdown
+          const taskText = document.getElementById(`task-text-${taskId}`);
+          taskText.textContent = newDescription;
+          taskText.style.display = "inline-block";
+          taskInput.style.display = "none";
+          taskPriority.style.display = "none";
+
+          // Optionally update the color based on priority
+          if (newPriority == 1) {
+            taskText.style.color = "rgb(175, 30, 19)";
+          } else if (newPriority == 2) {
+            taskText.style.color = "rgb(150, 82, 19)";
+          } else {
+            taskText.style.color = "";
+          }
+        } else {
+          alert(data.error);
         }
-    </script>
+      })
+      .catch((error) => console.error("Error:", error));
+  }
+</script>
+
 {% endblock %}

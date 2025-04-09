@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">Edit Profile</h2>
+    <div class="card mx-auto" style="max-width: 600px;">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('main.edit_profile') }}" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+
+                <!-- Display Current Profile Picture -->
+                <div class="text-center mb-3">
+                    <img src="{{ url_for('static', filename=user.profile_picture or 'img/default_profile.png') }}" 
+                         alt="Profile Picture" 
+                         class="rounded-circle" 
+                         style="width: 150px; height: 150px; object-fit: cover;">
+                </div>
+
+                <!-- Upload New Profile Picture -->
+                <div class="form-group">
+                    <label for="profile_picture">Profile Picture</label>
+                    <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*">
+                </div>
+
+                <!-- Username -->
+                <div class="form-group mt-3">
+                    <label for="username">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group mt-3">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                </div>
+
+                <button type="submit" class="btn btn-success mt-4">Save Changes</button>
+                <a href="{{ url_for('main.display_profile') }}" class="btn btn-secondary mt-4">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

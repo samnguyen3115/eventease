@@ -18,6 +18,12 @@ task_assignments = db.Table(
     sqla.Column('user_id', sqla.Integer, sqla.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True),
     sqla.Column('task_id', sqla.Integer, sqla.ForeignKey('task.id', ondelete='CASCADE'), primary_key=True)
 )
+event_participants = db.Table(
+    'event_participants',
+    db.metadata,
+    sqla.Column('user_id', sqla.Integer, sqla.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True),
+    sqla.Column('event_id', sqla.Integer, sqla.ForeignKey('event.id', ondelete='CASCADE'), primary_key=True)
+)
 
 # User Model
 class User(UserMixin, db.Model):
@@ -26,8 +32,12 @@ class User(UserMixin, db.Model):
     email: sqlo.Mapped[str] = sqlo.mapped_column(sqla.String(120), unique=True, nullable=False)
     password_hash: sqlo.Mapped[Optional[str]] = sqlo.mapped_column(sqla.String(256))
     events: sqlo.WriteOnlyMapped[list["Event"]] = sqlo.relationship("Event", back_populates="user", cascade="all, delete-orphan")
-    tasks: sqlo.WriteOnlyMapped[list["Task"]] = sqlo.relationship("Task", secondary=task_assignments, back_populates="assigned_users")
-
+    tasks: sqlo.Mapped[list["Task"]] = sqlo.relationship(
+        "Task",
+        secondary=task_assignments,
+        back_populates="assigned_users"
+    )
+    profile_picture = db.Column(db.String(120), nullable=True)
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -36,6 +46,13 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return f"<User id={self.id} username={self.username}>"
+    
+    participating_events: sqlo.Mapped[list["Event"]] = sqlo.relationship(
+    "Event",
+    secondary=event_participants,
+    back_populates="participants"
+    )
+
 
 # Event Model
 from sqlalchemy.orm import relationship
@@ -51,6 +68,12 @@ class Event(db.Model):
 
     def __repr__(self):
         return f"<Event id={self.id} name={self.name}>"
+    participants: sqlo.Mapped[list["User"]] = sqlo.relationship(
+    "User",
+    secondary=event_participants,
+    back_populates="participating_events"
+    )
+
 
 # Task Model
 class Task(db.Model):
@@ -63,8 +86,15 @@ class Task(db.Model):
     event: sqlo.Mapped["Event"] = sqlo.relationship("Event", back_populates="tasks")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    assigned_users: sqlo.WriteOnlyMapped[list["User"]] = sqlo.relationship("User", secondary=task_assignments, back_populates="tasks")
+    # Add passive_deletes=True to handle delete operations without loading the relationship
+    assigned_users: sqlo.Mapped[list["User"]] = sqlo.relationship(
+        "User",
+        secondary=task_assignments,
+        back_populates="tasks",
+        passive_deletes=True
+    )
 
     def __repr__(self):
         return f"<Task id={self.id} description={self.description[:20]} priority={self.priority} due_date={self.due_date} completed={self.completed}>"
+
 

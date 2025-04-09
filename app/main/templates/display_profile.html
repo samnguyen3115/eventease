@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">Profile</h2>
+    <div class="card mx-auto" style="max-width: 60%; background-color: rgba(20, 21, 22, 0.582);">
+        <div class="card-body text-center">
+            <!-- Display Profile Picture -->
+            <img src="{{ url_for('static', filename=user.profile_picture or 'img/default_profile.png') }}" 
+                 alt="Profile Picture" 
+                 class="rounded-circle mb-3" 
+                 style="width: 150px; height: 150px; object-fit: cover;">
+
+            <h5 style = "font-size: x-large;color: white;"> {{ user.username }}</h5>
+            <p style = "color: white;"><strong>Email:</strong> {{ user.email }}</p>
+            <a href="{{ url_for('main.edit_profile') }}" class="btn btn-primary">Edit Profile</a>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,30 +1,721 @@
-<div class="event-card">
+{% extends "base.html" %} {% block content %}
+<div class="event-card-2">
     <!-- Progress Bar -->
+    
+
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; height: 60px; padding: 0 15px;">
+               <!-- Left Button -->
+        <button class="fluent-button" onclick="openAssignUserToEventModal()">
+            <img src="{{ url_for('static', filename='img/add_user.png') }}" alt="Add User">
+        </button>
+    
+        <!-- Center Name -->
+        <h2 >{{ event.name }}</h2>
+    
+        <!-- Right Button -->
+        <button class="fluent-button" onclick="openAddTaskModal()">
+            <img src="{{ url_for('static', filename='img/add_task.png') }}" alt="Add Task">
+        </button>
+    </div>
+    
+    
+    
+    <p class="event-date"><strong>Date:</strong> {{ event.date.strftime('%Y-%m-%d') }}</p>
     <div class="progress-bar-container">
         <div class="progress-bar">
             <div class="progress-bar-fill" style="width: 0%;"></div>
         </div>
     </div>
+     
+    
 
-    <h2 class="event-name">{{ event.name }}</h2>
-    <p class="event-date"><strong>Date:</strong> {{ event.date.strftime('%Y-%m-%d') }}</p>
+    <!-- Add Task Modal -->
+<div id="addTaskModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="background-color: rgba(41, 44, 45, 0.903)">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTaskModalLabel">Add New Task</h5>
+            </div>
+            <div class="modal-body">
+                <form id="addTaskForm">
+                    <div class="form-group">
+                        <label for="newTaskDescription">Description</label>
+                        <input type="text" class="form-control" id="newTaskDescription" style="background-color: rgb(30, 31, 31);color:white" placeholder="Enter task description">
+                    </div>
+                    <div class="form-group">
+                        <label for="newTaskPriority">Priority</label>
+                        <select class="form-control" style="background-color: rgb(30, 31, 31); color: white;" id="newTaskPriority">
+                            <option value="1" style="color: white;">Important</option>
+                            <option value="2" style="color: white;">Necessary</option>
+                            <option value="3" style="color: white;">Normal</option>
+                        </select>
+                    </div>
+                    <!-- New Due Date Field -->
+                    <div class="form-group">
+                        <label for="newTaskDueDate">Due Date</label>
+                        <input type="date" class="form-control" id="newTaskDueDate" style="background-color: rgb(30, 31, 31); color: white;">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="submitAddTask()">Add Task</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <h3 class="tasks-title">Top Tasks:</h3>
+    <!-- Assign User Modal -->
+    <div id="assignUserModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="assignUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="background-color: rgba(41, 44, 45, 0.903)">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assignUserModalLabel" style="color:white">Assign User to Task</h5>
+                </div>
+                <div class="modal-body">
+                    <form id="assignUserForm">
+                        <div class="form-group">
+                            <label style="color:white">Select User(s)</label>
+                            <div id="assignUserCheckboxes" class="fluent-checkbox-group">
+                                {% for user in users %}
+                                    <div class="fluent-checkbox-wrapper">
+                                        <input type="checkbox" 
+                                               id="user-{{ user.id }}" 
+                                               value="{{ user.id }}" 
+                                               class="fluent-checkbox">
+                                        <label for="user-{{ user.id }}" class="fluent-checkbox-label">
+                                            {{ user.username }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <input type="hidden" id="assignTaskId"> <!-- Hidden input to store the task ID -->
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="submitAssignUser()">Assign</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assign User to Event Modal -->
+    <div id="assignUserToEventModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="assignUserToEventModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document" ">
+            <div class="modal-content" style="background-color: rgba(41, 44, 45, 0.903)">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assignUserToEventModalLabel">Assign User to Event</h5>
+                </div>
+                <div class="modal-body" style = "background-color: rgb(41, 44, 45);border:0px">
+                    <form id="assignUserToEventForm">
+                        <div class="form-group">
+                            <input type="email" class="form-control" style = "background-color: rgb(30, 31, 31); color: white" id="assignEventUserEmail" placeholder="Enter user email">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="submitAssignUserToEvent()">Assign</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <!-- Edit Task Modal -->
+<div id="editTaskModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="background-color: rgba(41, 44, 45, 0.903)">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editTaskModalLabel">Edit Task</h5>
+            </div>
+            <div class="modal-body">
+                <form id="editTaskForm">
+                    <input type="hidden" id="editTaskId">
+                    <div class="form-group">
+                        <label for="editTaskDescription">Description</label>
+                        <input type="text" class="form-control" id="editTaskDescription" style="background-color: rgb(41, 44, 45); color: white;" placeholder="Enter task description">
+                    </div>
+                    <div class="form-group">
+                        <label for="editTaskPriority">Priority</label>
+                        <select class="form-control" style="background-color: rgb(41, 44, 45); color: white;" id="editTaskPriority">
+                            <option value="1" style="color: white;">Important</option>
+                            <option value="2" style="color: white;">Necessary</option>
+                            <option value="3" style="color: white;">Normal</option>
+                        </select>
+                    </div>
+                    <!-- New Due Date Field -->
+                    <div class="form-group">
+                        <label for="editTaskDueDate">Due Date</label>
+                        <input type="date" class="form-control" id="editTaskDueDate" style="background-color: rgb(41, 44, 45); color: white;">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="submitEditTask()">Save Changes</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <ul class="tasks-list">
         {% for task in tasks %}
-            <li class="task-item">
-                <label class="task-label">
-                    <input type="checkbox" name="task_ids" value="{{ task.id }}" {% if task.completed %}checked{% endif %}>
-                    {% if task.priority == 1 %}
-                    <span class="task-text" style="color:rgb(175, 30, 19)">{{ task.description }}</span>
-                    {% elif task.priority == 2 %}
-                    <span class="task-text" style="color:rgb(150, 82, 19)">{{ task.description }}</span>
-                    {% elif task.priority == 3 %}
-                    <span class="task-text">{{ task.description }}</span>
+            <li class="task-item" style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">
+                <!-- Checkbox and Task Description on the Left -->
+                <label class="task-label" style="display: flex; align-items: center;">
+                    <input type="checkbox" name="task_ids" value="{{ task.id }}" {% if task.completed %}checked{% endif %} class="custom-checkbox">
+                    <span class="task-text" id="task-text-{{ task.id }}" style="font-weight: bold;font-size: large; {% if task.priority == 1 %}color: rgb(18, 141, 218);{% elif task.priority == 2 %}color:rgb(131, 185, 194);{%else%}color:white;{% endif %}">
+                        {{ task.description }}
+                    </span>
+                    {%if task.due_date and not task.completed%}
+                        {% if task.due_date < current_date and not task.completed %}
+                            <span class="due-date" style="margin-left: 10px; color: rgba(251, 40, 40, 0.641);">Overdue</span>
+                        {% elif 0 <  (task.due_date - current_date).days <= 5 and not task.completed %}
+                            <span style="color: rgba(253, 189, 12, 0.641);">Due in {{ (task.due_date - current_date).days }} day{{ 's' if (task.due_date - current_date).days > 1 else '' }}</span>
+                        {% else %}
+                            <span class="due-date" style="margin-left: 10px; color: rgba(107, 104, 104, 0.814);">Due: {{ task.due_date.strftime('%Y-%m-%d') }}</span>
+                        {% endif %}
                     {% endif %}
                 </label>
+    
+                <!-- Buttons on the Right -->
+                <div class="task-buttons">
+                    {% if task.assigned_users|length > 0 %}
+                            {% for user in task.assigned_users %}
+                            <button class="btn btn-sm" style="background-color: rgba(255, 255, 255, 0); padding: 0;" onclick="openAssignUserModal({{ task.id }})">
+                                <div class="user-icon-container">
+                                    {% if user.profile_picture %}
+                                        <img src="{{ url_for('static', filename=user.profile_picture) }}" alt="{{ user.username }}" class="user-icon">
+                                    {% else %}
+                                        <img src="{{ url_for('static', filename='img/user.png') }}" alt="{{ user.username }}" class="user-icon" style=" filter:invert(100%)">
+                                    {% endif %}
+                                    <div class="user-tooltip">{{ user.username }}</div>
+                                </div>
+                            </button>
+                            {% endfor %}
+                        {% else %}
+                            <button class="btn btn-sm assign-btn" onclick="openAssignUserModal({{ task.id }})">
+                                <span class="assign-placeholder">Assign user</span>
+                            </button>
+                        {% endif %}
+                
+                    <button class="btn btn-sm edit-task-btn" style ="color:rgb(195, 223, 245)" onclick="openEditTaskModal({{ task.id }}, '{{ task.description }}', {{ task.priority }})">
+                        Edit
+                    </button>
+                </div>
             </li>
         {% endfor %}
     </ul>
-    <button type="button" class="view-details-button">View Details</button>
+    <form action="{{ url_for('main.delete_event', event_id=event.id) }}" method="POST" class="delete-form">
+        <input type="hidden" name="_method" value="DELETE">
+        <button type="submit" class="btn btn-danger" style ="color: white;">Delete</button>
+    </form>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const eventId = {{ event.id }};
+    // Initialize the progress bar
+    function initializeProgressBar(card) {
+      const checkboxes = card.querySelectorAll('input.custom-checkbox');
+      const progressBarFill = card.querySelector(".progress-bar-fill");
+  
+      // Update the progress bar when checkboxes are toggled
+      checkboxes.forEach((checkbox) => {
+        checkbox.addEventListener("change", () => {
+          updateProgressBar(card);
+          saveTaskState(checkbox); // Save the checkbox state to the database
+        });
+      });
+  
+      // Initialize the progress bar
+      updateProgressBar(card);
+    }
+  
+    // Update the progress bar
+    function updateProgressBar() {
+      const checkboxes = document.querySelectorAll('input.custom-checkbox');
+      const checked = document.querySelectorAll('input[type="checkbox"]:checked');
+      const progress = Math.round((checked.length / checkboxes.length) * 100);
+  
+      const progressBarFill = document.querySelector(".progress-bar-fill");
+      progressBarFill.style.width = `${progress}%`;
+    }
+  
+    // Save the checkbox state to the database
+    function saveTaskState(checkbox) {
+      const taskId = checkbox.value;
+      const completed = checkbox.checked;
+  
+      // Send an AJAX request to update the task status
+      fetch(`/update_task/${taskId}`, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ completed: completed }),
+      })
+          .then((response) => response.json())
+          .then((data) => {
+              if (!data.success) {
+                  console.error("Failed to update task status:", data.error);
+                  alert("Failed to update task status.");
+              } else {
+                  console.log("Task updated successfully:", data.message);
+              }
+          })
+          .catch((error) => {
+              console.error("Error:", error);
+              alert("An error occurred while updating the task status.");
+          });
+  }
+  
+    // Initialize checkbox listeners
+    function initializeCheckboxListeners() {
+      const checkboxes = document.querySelectorAll('input.custom-checkbox');
+      checkboxes.forEach((checkbox) => {
+          checkbox.addEventListener("change", () => {
+              saveTaskState(checkbox); // Save the checkbox state to the database
+              updateProgressBar(); // Update the progress bar dynamically
+          });
+      });
+  }
+  document.addEventListener("DOMContentLoaded", () => {
+    initializeCheckboxListeners();
+    updateProgressBar(); // Initialize the progress bar on page load
+  });
+  
+    // Initialize inline editing for the event name
+    function initializeEditableEventName(card, eventId) {
+      const eventNameElement = card.querySelector(".event-name");
+  
+      // Add double-click event listener
+      eventNameElement.addEventListener("dblclick", () => {
+        const currentName = eventNameElement.textContent.trim();
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = currentName;
+        input.classList.add("editable-input");
+  
+        // Replace the event name with the input field
+        eventNameElement.textContent = "";
+        eventNameElement.appendChild(input);
+        input.focus();
+  
+        // Save changes when the user presses Enter or clicks outside
+        const saveChanges = () => {
+          const newName = input.value.trim();
+          if (newName && newName !== currentName) {
+            // Send an AJAX request to update the event name
+            fetch(`/update_event_name/${eventId}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ name: newName }),
+            })
+              .then((response) => {
+                if (response.ok) {
+                  eventNameElement.textContent = newName; // Update the UI
+                } else {
+                  eventNameElement.textContent = currentName; // Revert on failure
+                  console.error("Failed to update event name");
+                }
+              })
+              .catch((error) => {
+                eventNameElement.textContent = currentName; // Revert on error
+                console.error("Error:", error);
+              });
+          } else {
+            eventNameElement.textContent = currentName; // Revert if no changes
+          }
+        };
+  
+        // Save changes on blur or Enter key
+        input.addEventListener("blur", saveChanges);
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            saveChanges();
+          }
+        });
+      });
+    }
+  
+    // Initialize inline editing for the event date
+    function initializeEditableEventDate(card, eventId) {
+      const eventDateElement = card.querySelector(".event-date");
+  
+      // Add double-click event listener
+      eventDateElement.addEventListener("dblclick", () => {
+        const currentDate = eventDateElement.textContent
+          .trim()
+          .replace("Date: ", "");
+        const input = document.createElement("input");
+        input.type = "date";
+        input.value = currentDate;
+        input.classList.add("editable-input");
+  
+        // Replace the event date with the input field
+        eventDateElement.textContent = "Date: ";
+        eventDateElement.appendChild(input);
+        input.focus();
+  
+        // Save changes when the user presses Enter or clicks outside
+        const saveChanges = () => {
+          const newDate = input.value.trim();
+          if (newDate && newDate !== currentDate) {
+            // Send an AJAX request to update the event date
+            fetch(`/update_event_date/${eventId}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ date: newDate }),
+            })
+              .then((response) => {
+                if (response.ok) {
+                  eventDateElement.textContent = `Date: ${newDate}`; // Update the UI
+                } else {
+                  eventDateElement.textContent = `Date: ${currentDate}`; // Revert on failure
+                  console.error("Failed to update event date");
+                }
+              })
+              .catch((error) => {
+                eventDateElement.textContent = `Date: ${currentDate}`; // Revert on error
+                console.error("Error:", error);
+              });
+          } else {
+            eventDateElement.textContent = `Date: ${currentDate}`; // Revert if no changes
+          }
+        };
+  
+        // Save changes on blur or Enter key
+        input.addEventListener("blur", saveChanges);
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            saveChanges();
+          }
+        });
+      });
+    }
+    function openEditTaskModal(taskId, description, priority, dueDate) {
+    // Populate the modal with task details
+    document.getElementById("editTaskId").value = taskId;
+    document.getElementById("editTaskDescription").value = description;
+    document.getElementById("editTaskPriority").value = priority;
+    document.getElementById("editTaskDueDate").value = dueDate || ""; // Set due date or leave empty
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Show the modal
+    $("#editTaskModal").modal("show");
+    $('.modal-backdrop').remove(); // Remove the backdrop to prevent it from closing the modal
+}
+function submitEditTask() {
+    const taskId = document.getElementById("editTaskId").value;
+    const description = document.getElementById("editTaskDescription").value.trim();
+    const priority = document.getElementById("editTaskPriority").value;
+    const dueDate = document.getElementById("editTaskDueDate").value; // Get the due date
+
+    if (!description) {
+        alert("Task description cannot be empty.");
+        return;
+    }
+
+    // Send the updated task details to the server
+    fetch(`/edit_task/${taskId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            description: description,
+            priority: priority,
+            due_date: dueDate, // Include the due date
+        }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                $("#editTaskModal").modal("hide"); // Close the modal
+                location.reload(); // Reload the page to reflect changes
+            } else {
+                alert(data.error || "Failed to update task.");
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while updating the task.");
+        });
+}
+    function closeModal() {
+    // Hide the modal
+        $("#assignUserModal").modal("hide");
+        $("#addTaskModal").modal("hide");
+        $("#assignUserToEventModal").modal("hide");
+        $("#editTaskModal").modal("hide");
+
+    }
+    function openAddTaskModal() {
+        $('#addTaskModal').modal('show');
+        $('.modal-backdrop').remove();
+    }
+
+    function submitAddTask() {
+    const description = document.getElementById('newTaskDescription').value.trim();
+    const priority = document.getElementById('newTaskPriority').value;
+    const dueDate = document.getElementById('newTaskDueDate').value; // Get the due date
+
+    if (!description) {
+        alert("Task description cannot be empty.");
+        return;
+    }
+
+    // Send the new task details to the server
+    fetch(`/add_task`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            description: description,
+            priority: priority,
+            due_date: dueDate, // Include the due date
+            event_id: {{ event.id }},
+        }),
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                $('#addTaskModal').modal('hide'); // Close the modal
+                location.reload(); // Reload the page to reflect changes
+            } else {
+                alert(data.error || "Failed to add task.");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("An error occurred while adding the task.");
+        });
+    }
+    function assignUserToTask(taskId) {
+      const emailInput = document.getElementById(`assign-user-email-${taskId}`);
+      const userEmail = emailInput.value.trim();
+  
+      if (!userEmail) {
+          alert("Please enter a valid email address.");
+          return;
+      }
+  
+      // Send an AJAX request to assign the user to the task
+      fetch(`/assign_user/${taskId}`, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: userEmail }),
+      })
+          .then((response) => response.json())
+          .then((data) => {
+              if (data.success) {
+                //   alert(data.message);
+                    $("#assignUserModal").modal("hide"); // Close the modal
+                  emailInput.value = ""; // Clear the input field
+                  location.reload();
+              } else {
+                  alert(data.error || "Failed to assign user.");
+              }
+          })
+          .catch((error) => {
+              console.error("Error:", error);
+              alert("An error occurred while assigning the user.");
+          });
+  }
+
+  function openAssignUserModal(taskId) {
+    // Set the task ID in the hidden input field
+    document.getElementById("assignTaskId").value = taskId;
+
+    // Clear the selected checkboxes
+    const checkboxes = document.querySelectorAll("#assignUserCheckboxes input[type='checkbox']");
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Show the modal
+    $("#assignUserModal").modal("show");
+    $('.modal-backdrop').remove();
+}
+
+function submitAssignUser() {
+    const taskId = document.getElementById("assignTaskId").value;
+    const checkboxes = document.querySelectorAll("#assignUserCheckboxes input[type='checkbox']:checked");
+    const selectedUserIds = Array.from(checkboxes).map(checkbox => checkbox.value);
+    const selectedUserNames = Array.from(checkboxes).map(checkbox => checkbox.nextElementSibling.textContent);
+
+    if (selectedUserIds.length === 0) {
+        alert("Please select at least one user.");
+        return;
+    }
+
+    // Debug: Log selected user IDs and names
+    console.log("Selected User IDs:", selectedUserIds);
+    console.log("Selected User Names:", selectedUserNames);
+
+    // Send an AJAX request to assign the selected users to the task
+    fetch(`/assign_users_to_task/${taskId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_ids: selectedUserIds }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                // alert(data.message);
+                $("#assignUserModal").modal("hide"); // Close the modal
+                location.reload(); // Reload the page to reflect changes
+            } else {
+                alert(data.error || "Failed to assign users to the task.");
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while assigning users to the task.");
+        });
+}
+
+
+    function openAssignUserToEventModal() {
+      // Clear the email input field
+      document.getElementById("assignEventUserEmail").value = "";
+  
+      // Show the modal
+      $("#assignUserToEventModal").modal("show");
+      $('.modal-backdrop').remove();
+
+  }
+  
+  function submitAssignUserToEvent() {
+    const userEmail = document.getElementById("assignEventUserEmail").value.trim();
+    console.log("User email entered:", userEmail);
+    if (!userEmail) {
+        alert("Please enter a valid email address.");
+        return;
+    }
+
+    // Send an AJAX request to assign the user to the event
+    fetch(`/assign_user_to_event/${eventId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_email: userEmail }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                $("#assignUserToEventModal").modal("hide"); // Close the modal
+                document.getElementById("assignEventUserEmail").value = ""; // Clear the input field
+                location.reload(); // Reload the page to reflect changes
+            } else {
+                alert(data.error || "Failed to assign user to event.");
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while assigning the user to the event.");
+        });
+}
+
+  function enableEditTask(taskId) {
+    const taskText = document.getElementById(`task-text-${taskId}`);
+    const taskInput = document.getElementById(`task-input-${taskId}`);
+    const taskPriority = document.getElementById(`task-priority-${taskId}`);
+    const editButton = document.querySelector(`.edit-task-btn[onclick="enableEditTask(${taskId})"]`);
+
+    // Hide the task text and show the input and dropdown
+    taskText.style.display = 'none';
+    taskInput.style.display = 'inline-block';
+    taskPriority.style.display = 'inline-block';
+    editButton.style.display = 'none'; // Hide the edit button
+
+    // Focus on the input field
+    taskInput.focus();
+
+    // Save changes when the user presses Enter
+    taskInput.addEventListener('keypress', function (event) {
+        if (event.key === 'Enter') {
+            saveTaskChanges(taskId);
+        }
+    });
+
+    // Save changes when the priority dropdown changes
+    taskPriority.addEventListener('change', function () {
+        saveTaskChanges(taskId);
+    });
+
+    // Save changes when the input loses focus
+    taskInput.addEventListener('blur', function () {
+        saveTaskChanges(taskId);
+    });
+}
+
+function saveTaskChanges(taskId) {
+    const taskText = document.getElementById(`task-text-${taskId}`);
+    const taskInput = document.getElementById(`task-input-${taskId}`);
+    const taskPriority = document.getElementById(`task-priority-${taskId}`);
+    const editButton = document.querySelector(`.edit-task-btn[onclick="enableEditTask(${taskId})"]`);
+
+    const newDescription = taskInput.value.trim();
+    const newPriority = taskPriority.value;
+
+    if (!newDescription) {
+        alert("Task description cannot be empty.");
+        return;
+    }
+
+    // Send the updated task details to the server
+    fetch(`/edit_task/${taskId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            description: newDescription,
+            priority: newPriority,
+        }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                // Update the UI
+                taskText.textContent = newDescription;
+                taskText.style.display = 'inline-block';
+                taskInput.style.display = 'none';
+                taskPriority.style.display = 'none';
+                editButton.style.display = 'inline-block';
+
+                // Optionally update the color based on priority
+                if (newPriority === "1") {
+                    taskText.style.color = "rgb(18, 141, 218)";
+                } else if (newPriority === "2") {
+                    taskText.style.color = "rgb(131, 185, 194)";
+                } else {
+                    taskText.style.color = white;
+                }
+            } else {
+                alert(data.error || "Failed to update task.");
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while updating the task.");
+        });
+}
+</script>
+
+
+{% endblock %}

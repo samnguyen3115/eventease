@@ -1,5 +1,6 @@
 import json
 import re
+from tkinter import Image
 from flask import Response, render_template, request, jsonify, flash, redirect, url_for
 from flask_login import login_required
 import google.generativeai as genai
@@ -16,6 +17,13 @@ from werkzeug.utils import secure_filename
 from app.main.forms import ProfileForm
 from flask import current_app
 from datetime import datetime,timedelta
+from ultralytics import YOLO
+from PIL import Image
+import numpy as np
+from io import BytesIO
+from transformers import BlipProcessor, BlipForConditionalGeneration
+
+
 
 UPLOAD_FOLDER = 'static/profile_pics'  # Define where images should be stored
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -106,36 +114,45 @@ def create_event_and_tasks():
     try:
         if not conversation_history:
             # Initial prompt, ask the first clarifying question
-            prompt = f"""
-            Based on the following event description: "{user_input}", ask ONE clarifying question to help me generate a more specific checklist.Remember not to ask anything the user have mention in "{user_input}"
-            Return ONLY the question.
-            """
+             prompt = f"""
+        Based on the following event description: "{user_input}", ask ONE clarifying question that will help create a more specific checklist.
+        Do not ask about things already mentioned in "{user_input}".
+        Return ONLY the question.
+        """
         else:
             if question_index < 2:
                 # Ask a follow-up question
                 prompt = f"""
-                Based on the following conversation:
-                {conversation_history}
-                Ask them what they want to prioritize in the event, what aspects they want the most. Return ONLY the question and the suggestions, please format it to look better.
-                Remember not to ask anything the user have mention in the chat: {conversation_history}
-                """
+        Based on the following conversation:
+        {conversation_history}
+        Ask the user what aspect of the event they want to prioritize most (e.g., fun, efficiency, preparation, safety, etc...).\
+        Create the list of aspect based on their event, not the template. You can guess with "{event.name}".
+        Format your response with just the question and a short list of example options. 
+        Do not ask about things already mentioned in the chat: {conversation_history}
+        """
             else:
                 # Generate the checklist after all questions are answered
                 prompt = f"""
-                Based on the following conversation:
-                {conversation_history}
-                Generate a JSON checklist with at least 8 tasks with this topic "{event.name}".Remember to just give task as pre-event tasks. Include keys for 'task', 'priority' (1:important/2:necessary/3:normal) the priority should focus on the event - important aspect that user declare before in "{conversation_history}",'due_date' (optional, just for important tasks, just have this for if user already declare the event date),'item'(just for things. Example task is "Bring passport". item is "passport").
-
-                Example JSON output:
-                [
-                    {{"task": "Book flights", "priority": 1, "due_date": "2023-10-01", "item": "none"}},
-                    {{"task": "Pack sunscreen", "priority": 2, "due_date": "2023-10-02", "item": "sunscreen"}},
-                    {{"task": "Buy snacks", "priority": 3, "due_date": "2023-10-03", "item": "snacks"}},
-                    
-                ]
-
-                Return ONLY the JSON. Do not include any other text or explanations, and do not wrap the JSON in markdown code blocks.
-                """
+        Based on the following conversation:
+        {conversation_history}
+        Generate a JSON checklist with at least 8 pre-event tasks related to the event "{event.name}".
+        Use the priorities expressed in the second question to set 'priority' (1: important, 2: necessary, 3: normal).
+        Each task should include:
+        - 'task': the description of the task.
+        - 'priority': based on how relevant it is to the user's stated priorities.
+        - 'due_date': only if the user has already mentioned a date.
+        - 'item': the physical item involved. For example:
+            - If the task is "Bring guitar", item = "guitar"
+            - If the task is "Book hotel", item = "none"
+            - Remember the item just be 1 item, not a list of items.
+        
+        Return ONLY the JSON. No explanations. No markdown. Just pure JSON like:
+        [
+            {{"task": "Book hotel", "priority": 1, "due_date": "2023-10-01", "item": "none"}},
+            {{"task": "Pack sunscreen", "priority": 2, "item": "sunscreen"}},
+            {{"task": "Buy snacks", "priority": 3, "item": "snacks"}}
+        ]
+        """
 
         response = model.generate_content(prompt)
         response_text = response.text.strip()
@@ -611,3 +628,81 @@ def calender_feed():
                 # Return the calendar feed as a response
     return Response(str(calendar), mimetype="text/calendar")
 
+# Load the BLIP model and processor
+blip_processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
+blip_model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
+
+@bp_main.route('/complete_task_with_image/<int:task_id>', methods=['POST'])
+@login_required
+def complete_task_with_image(task_id):
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    # Fetch the task
+    task = db.session.get(Task, task_id)
+    if not task:
+        return jsonify({"error": "Task not found"}), 404
+
+    if not task.item:
+        return jsonify({"error": "This task does not require an item to be verified."}), 400
+
+    try:
+        # Validate the uploaded file as an image
+        file_stream = BytesIO(file.read())
+        try:
+            img = Image.open(file_stream)
+            img.verify()  # Verify that the file is a valid image
+        except Exception:
+            return jsonify({"error": "The uploaded file is not a valid image."}), 400
+
+        # Reload the image for BLIP processing
+        file_stream.seek(0)  # Reset the stream position to the beginning
+        img = Image.open(file_stream).convert('RGB')  # Ensure the image is in RGB format
+
+        # Generate a caption using BLIP
+        inputs = blip_processor(images=img, return_tensors="pt")
+        outputs = blip_model.generate(**inputs)
+        caption = blip_processor.decode(outputs[0], skip_special_tokens=True)
+
+        print(f"Generated caption: {caption}")
+
+        # Use Google Generative AI to determine if the required item and caption are related
+        required_item = task.item.lower()
+        prompt = f"""
+        Determine if the following two phrases are related:
+        1. Required item: "{required_item}"
+        2. Caption: "{caption}"
+        Respond with "true" if they are related and "false" if they are not.
+        """
+        try:
+            # Use genai.generate_text instead of model.generate_text
+            response = model.generate_content(prompt)
+            relation = response.text.strip().lower()
+
+            if relation == "true":
+                # Mark the task as completed
+                task.completed = True
+                db.session.commit()
+                return jsonify({
+                    "success": True,
+                    "message": f"Task '{task.description}' completed successfully!",
+                    "caption": caption,
+                    "related": True
+                })
+
+            return jsonify({
+                "success": False,
+                "message": f"The required item '{task.item}' was not found in the image.",
+                "caption": caption,
+                "related": False
+            }), 400
+
+        except Exception as e:
+            return jsonify({"error": f"An error occurred while using Generative AI: {str(e)}"}), 500
+
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500

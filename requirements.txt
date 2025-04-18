@@ -16,3 +16,5 @@ psycopg2
 google
 google-generativeai
 ics
+tensorflow
+pillow

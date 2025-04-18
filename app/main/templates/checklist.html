@@ -1,4 +1,25 @@
 {% extends "base.html" %} {% block content %}
+<!-- Modal for Completing Task with Image -->
+<div id="completeTaskModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="completeTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="completeTaskModalLabel">Complete Task</h5>
+            </div>
+            <div class="modal-body">
+                <form id="completeTaskForm" enctype="multipart/form-data">
+                    <input type="hidden" id="taskId" name="taskId">
+                    <div class="form-group">
+                        <label for="taskImage">Upload an Image of the Item</label>
+                        <input type="file" class="form-control" id="taskImage" name="file" accept="image/*" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- AddTaskModal -->
 <div id="addTaskModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addTaskModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -208,6 +229,9 @@
 
                 <button class="btn btn-sm edit-task-btn" style="color: rgb(195, 223, 245);" onclick="openEditTaskModal({{ task.id }}, '{{ task.description }}', {{ task.priority }}, '{{ task.due_date }}', '{{ task.item }}')">
                     Edit
+                </button>
+                <button class="btn btn-sm btn-success" onclick="openCompleteTaskModal({{ task.id }})">
+                    Complete Task
                 </button>
             </div>
         </li>
@@ -731,17 +755,39 @@ function saveTaskChanges(taskId) {
         }
     });
 
-    // Toggle theme on button click
-    document.getElementById("themeToggle").addEventListener("click", () => {
-        document.body.classList.toggle("light-mode");
+    // Open the modal and set the task ID
+    function openCompleteTaskModal(taskId) {
+        document.getElementById('taskId').value = taskId;
+        $('#completeTaskModal').modal('show');
+        $('.modal-backdrop').remove(); // Remove the backdrop to prevent it from closing the modal
+    }
 
-        // Save the user's preference in localStorage
-        if (document.body.classList.contains("light-mode")) {
-            localStorage.setItem("theme", "light");
-        } else {
-            localStorage.setItem("theme", "dark");
-        }
+    // Handle form submission
+    document.getElementById('completeTaskForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const taskId = document.getElementById('taskId').value;
+
+        fetch(`/complete_task_with_image/${taskId}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload(); // Reload the page to reflect changes
+            } else {
+                alert(data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while completing the task.');
+        });
     });
+    
 </script>
 
 

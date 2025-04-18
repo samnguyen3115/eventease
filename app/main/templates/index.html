@@ -2,9 +2,9 @@
 <h1 style="text-align: center; margin-top: 20px">Event Dashboard</h1>
 <div class="event-grid">
   {% for event in events %}
-  <div class="event-card" onclick="redirectToChecklist({{ event.id }})" style="background-color: rgba(41, 44, 45, 0.903); border: 0px;" >
+  <div class="event-card" onclick="redirectToChecklist({{ event.id }})" style="background-color: rgba(239, 244, 249, 0.792); border: 0px;" >
     <h2 class="event-name" style="font-size: 24px;color:rgb(0, 120, 212)">{{ event.name }}</h2>
-    <p class="event-date" style="color:white;">
+    <p class="event-date" style="color:rgb(52, 50, 50);">
       <strong>Date:</strong> {{ event.date.strftime('%Y-%m-%d') }}
     </p>
 

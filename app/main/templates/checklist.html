@@ -1,8 +1,144 @@
 {% extends "base.html" %} {% block content %}
+<!-- AddTaskModal -->
+<div id="addTaskModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="background-color: #f5f8fb; color :black">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTaskModalLabel">Add New Task</h5>
+            </div>
+            <div class="modal-body">
+                <form id="addTaskForm">
+                    <div class="form-group">
+                        <label for="newTaskDescription">Description</label>
+                        <input type="text" class="form-control" id="newTaskDescription" style="background-color: #f5f8fb;color:black" placeholder="Enter task description">
+                    </div>
+                    <div class="form-group">
+                        <label for="newTaskItem">Item</label>
+                        <input type="text" class="form-control" id="newTaskItem" style="background-color: #f5f8fb;color:black" placeholder="Enter task item">
+                    </div>
+                    <div class="form-group">
+                        <label for="newTaskPriority">Priority</label>
+                        <select class="form-control" style="background-color: #f5f8fb; color: rgb(0, 0, 0);" id="newTaskPriority">
+                            <option value="1" style="color: rgb(0, 0, 0);">Important</option>
+                            <option value="2" style="color: rgb(0, 0, 0);">Necessary</option>
+                            <option value="3" style="color: rgb(0, 0, 0);">Normal</option>
+                        </select>
+                    </div>
+                    <!-- New Due Date Field -->
+                    <div class="form-group">
+                        <label for="newTaskDueDate">Due Date</label>
+                        <input type="date" class="form-control" id="newTaskDueDate" style="background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="submitAddTask()">Add Task</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Assign User Modal -->
+<div id="assignUserModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="assignUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="background-color: #f5f8fb; color :black">
+            <div class="modal-header">
+                <h5 class="modal-title" id="assignUserModalLabel" style="color:rgb(209, 209, 209);color: black;">Assign User to Task</h5>
+            </div>
+            <div class="modal-body">
+                <form id="assignUserForm">
+                    <div class="form-group">
+                        <label style="color:rgb(0, 0, 0)">Select User(s)</label>
+                        <div id="assignUserCheckboxes" class="fluent-checkbox-group">
+                            {% for user in users %}
+                                <div class="fluent-checkbox-wrapper">
+                                    <input type="checkbox" 
+                                           id="user-{{ user.id }}" 
+                                           value="{{ user.id }}" 
+                                           class="fluent-checkbox">
+                                    <label for="user-{{ user.id }}" class="fluent-checkbox-label">
+                                        {{ user.username }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <input type="hidden" id="assignTaskId"> <!-- Hidden input to store the task ID -->
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="submitAssignUser()">Assign</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Assign User to Event Modal -->
+    <div id="assignUserToEventModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="assignUserToEventModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document" ">
+            <div class="modal-content" style="background-color: #f5f8fb; color :black">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assignUserToEventModalLabel">Assign User to Event</h5>
+                </div>
+                <div class="modal-body" style = "background-color: #f5f8fb;border:0px">
+                    <form id="assignUserToEventForm">
+                        <div class="form-group">
+                            <input type="email" class="form-control" style = "background-color: #f5f8fb; color: rgb(0, 0, 0)" id="assignEventUserEmail" placeholder="Enter user email">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="submitAssignUserToEvent()">Assign</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  <!-- Edit Task Modal -->
+  <div id="editTaskModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="background-color: #f5f8fb; color :black">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editTaskModalLabel">Edit Task</h5>
+            </div>
+            <div class="modal-body">
+                <form id="editTaskForm">
+                    <input type="hidden" id="editTaskId">
+                    <div class="form-group">
+                        <label for="editTaskDescription">Description</label>
+                        <input type="text" class="form-control" id="editTaskDescription" style="background-color: #ffffff; color: rgb(0, 0, 0);" placeholder="Enter task description">
+                    </div>
+                    <div class="form-group">
+                        <label for="editTaskItem">Item</label>
+                        <input type="text" class="form-control" id="editTaskItem" style="background-color: #ffffff; color: rgb(0, 0, 0);" placeholder="Enter task description">
+                    </div>
+                    <div class="form-group">
+                        <label for="editTaskPriority">Priority</label>
+                        <select class="form-control" style="background-color: #ffffff; color: rgb(0, 0, 0);" id="editTaskPriority">
+                            <option value="1" style="color: rgb(0, 0, 0);">Important</option>
+                            <option value="2" style="color: rgb(0, 0, 0);">Necessary</option>
+                            <option value="3" style="color: rgb(0, 0, 0);">Normal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editTaskDueDate">Due Date</label>
+                        <input type="date" class="form-control" id="editTaskDueDate" style="background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="submitEditTask()">Save Changes</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="event-card-2">
     <!-- Progress Bar -->
-    
-
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; height: 60px; padding: 0 15px;">
                <!-- Left Button -->
         <button class="fluent-button" onclick="openAssignUserToEventModal()">
@@ -28,187 +164,55 @@
     </div>
      
     
-
-    <!-- Add Task Modal -->
-<div id="addTaskModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addTaskModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content" style="background-color: rgba(41, 44, 45, 0.903)">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addTaskModalLabel">Add New Task</h5>
-            </div>
-            <div class="modal-body">
-                <form id="addTaskForm">
-                    <div class="form-group">
-                        <label for="newTaskDescription">Description</label>
-                        <input type="text" class="form-control" id="newTaskDescription" style="background-color: rgb(30, 31, 31);color:white" placeholder="Enter task description">
-                    </div>
-                    <div class="form-group">
-                        <label for="newTaskPriority">Priority</label>
-                        <select class="form-control" style="background-color: rgb(30, 31, 31); color: white;" id="newTaskPriority">
-                            <option value="1" style="color: white;">Important</option>
-                            <option value="2" style="color: white;">Necessary</option>
-                            <option value="3" style="color: white;">Normal</option>
-                        </select>
-                    </div>
-                    <!-- New Due Date Field -->
-                    <div class="form-group">
-                        <label for="newTaskDueDate">Due Date</label>
-                        <input type="date" class="form-control" id="newTaskDueDate" style="background-color: rgb(30, 31, 31); color: white;">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="submitAddTask()">Add Task</button>
-                <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-    <!-- Assign User Modal -->
-    <div id="assignUserModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="assignUserModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content" style="background-color: rgba(41, 44, 45, 0.903)">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="assignUserModalLabel" style="color:white">Assign User to Task</h5>
-                </div>
-                <div class="modal-body">
-                    <form id="assignUserForm">
-                        <div class="form-group">
-                            <label style="color:white">Select User(s)</label>
-                            <div id="assignUserCheckboxes" class="fluent-checkbox-group">
-                                {% for user in users %}
-                                    <div class="fluent-checkbox-wrapper">
-                                        <input type="checkbox" 
-                                               id="user-{{ user.id }}" 
-                                               value="{{ user.id }}" 
-                                               class="fluent-checkbox">
-                                        <label for="user-{{ user.id }}" class="fluent-checkbox-label">
-                                            {{ user.username }}
-                                        </label>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <input type="hidden" id="assignTaskId"> <!-- Hidden input to store the task ID -->
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" onclick="submitAssignUser()">Assign</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Assign User to Event Modal -->
-    <div id="assignUserToEventModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="assignUserToEventModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document" ">
-            <div class="modal-content" style="background-color: rgba(41, 44, 45, 0.903)">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="assignUserToEventModalLabel">Assign User to Event</h5>
-                </div>
-                <div class="modal-body" style = "background-color: rgb(41, 44, 45);border:0px">
-                    <form id="assignUserToEventForm">
-                        <div class="form-group">
-                            <input type="email" class="form-control" style = "background-color: rgb(30, 31, 31); color: white" id="assignEventUserEmail" placeholder="Enter user email">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" onclick="submitAssignUserToEvent()">Assign</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Task Modal -->
-    <!-- Edit Task Modal -->
-<div id="editTaskModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content" style="background-color: rgba(41, 44, 45, 0.903)">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editTaskModalLabel">Edit Task</h5>
-            </div>
-            <div class="modal-body">
-                <form id="editTaskForm">
-                    <input type="hidden" id="editTaskId">
-                    <div class="form-group">
-                        <label for="editTaskDescription">Description</label>
-                        <input type="text" class="form-control" id="editTaskDescription" style="background-color: rgb(41, 44, 45); color: white;" placeholder="Enter task description">
-                    </div>
-                    <div class="form-group">
-                        <label for="editTaskPriority">Priority</label>
-                        <select class="form-control" style="background-color: rgb(41, 44, 45); color: white;" id="editTaskPriority">
-                            <option value="1" style="color: white;">Important</option>
-                            <option value="2" style="color: white;">Necessary</option>
-                            <option value="3" style="color: white;">Normal</option>
-                        </select>
-                    </div>
-                    <!-- New Due Date Field -->
-                    <div class="form-group">
-                        <label for="editTaskDueDate">Due Date</label>
-                        <input type="date" class="form-control" id="editTaskDueDate" style="background-color: rgb(41, 44, 45); color: white;">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="submitEditTask()">Save Changes</button>
-                <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-    <ul class="tasks-list">
-        {% for task in tasks %}
-            <li class="task-item" style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">
-                <!-- Checkbox and Task Description on the Left -->
-                <label class="task-label" style="display: flex; align-items: center;">
-                    <input type="checkbox" name="task_ids" value="{{ task.id }}" {% if task.completed %}checked{% endif %} class="custom-checkbox">
-                    <span class="task-text" id="task-text-{{ task.id }}" style="font-weight: bold;font-size: large; {% if task.priority == 1 %}color: rgb(18, 141, 218);{% elif task.priority == 2 %}color:rgb(131, 185, 194);{%else%}color:white;{% endif %}">
-                        {{ task.description }}
-                    </span>
-                    {%if task.due_date and not task.completed%}
-                        {% if task.due_date < current_date and not task.completed %}
-                            <span class="due-date" style="margin-left: 10px; color: rgba(251, 40, 40, 0.641);">Overdue</span>
-                        {% elif 0 <  (task.due_date - current_date).days <= 5 and not task.completed %}
-                            <span style="color: rgba(253, 189, 12, 0.641);">Due in {{ (task.due_date - current_date).days }} day{{ 's' if (task.due_date - current_date).days > 1 else '' }}</span>
-                        {% else %}
-                            <span class="due-date" style="margin-left: 10px; color: rgba(107, 104, 104, 0.814);">Due: {{ task.due_date.strftime('%Y-%m-%d') }}</span>
-                        {% endif %}
+  
+<ul class="tasks-list">
+    {% for task in tasks %}
+        <li class="task-item">
+            <!-- Checkbox and Task Description -->
+            <label class="task-label" style="display: flex; align-items: center; ;">
+                <input type="checkbox" name="task_ids" value="{{ task.id }}" {% if task.completed %}checked{% endif %} class="custom-checkbox">
+                <span class="task-text" id="task-text-{{ task.id }}" style=" font-size: large; {% if task.priority == 1 %} color: rgb(212, 0, 0);{% elif task.priority == 2 %}color:rgb(255, 144, 8);{% else %}color:black;{% endif %}">
+                    {{ task.description }}
+                </span>
+                {% if task.due_date and not task.completed %}
+                    {% if task.due_date < current_date %}
+                        <span class="due-date" style="margin-left: 10px; color: rgba(251, 40, 40, 0.641);">Overdue</span>
+                    {% elif 0 < (task.due_date - current_date).days <= 5 %}
+                        <span style="color: rgba(253, 189, 12, 0.641);">Due in {{ (task.due_date - current_date).days }} day{{ 's' if (task.due_date - current_date).days > 1 else '' }}</span>
+                    {% else %}
+                        <span class="due-date" style="margin-left: 10px; color: rgba(107, 104, 104, 0.814);">Due: {{ task.due_date.strftime('%Y-%m-%d') }}</span>
                     {% endif %}
-                </label>
-    
-                <!-- Buttons on the Right -->
-                <div class="task-buttons">
+                {% endif %}
+            </label>
+
+            <!-- Buttons -->
+            <div class="task-buttons">
+                <div class="assign-user-container" style="margin: 0;">
                     {% if task.assigned_users|length > 0 %}
-                            {% for user in task.assigned_users %}
-                            <button class="btn btn-sm" style="background-color: rgba(255, 255, 255, 0); padding: 0;" onclick="openAssignUserModal({{ task.id }})">
-                                <div class="user-icon-container">
-                                    {% if user.profile_picture %}
-                                        <img src="{{ url_for('static', filename=user.profile_picture) }}" alt="{{ user.username }}" class="user-icon">
-                                    {% else %}
-                                        <img src="{{ url_for('static', filename='img/user.png') }}" alt="{{ user.username }}" class="user-icon" style=" filter:invert(100%)">
-                                    {% endif %}
-                                    <div class="user-tooltip">{{ user.username }}</div>
-                                </div>
-                            </button>
-                            {% endfor %}
-                        {% else %}
-                            <button class="btn btn-sm assign-btn" onclick="openAssignUserModal({{ task.id }})">
-                                <span class="assign-placeholder">Assign user</span>
-                            </button>
-                        {% endif %}
-                
-                    <button class="btn btn-sm edit-task-btn" style ="color:rgb(195, 223, 245)" onclick="openEditTaskModal({{ task.id }}, '{{ task.description }}', {{ task.priority }})">
-                        Edit
-                    </button>
+                        {% for user in task.assigned_users %}
+                            <div class="user-icon-container" >
+                                {% if user.profile_picture %}
+                                    <img src="{{ url_for('static', filename=user.profile_picture) }}" alt="{{ user.username }}" class="user-icon">
+                                {% else %}
+                                    <img src="{{ url_for('static', filename='img/user.png') }}" alt="{{ user.username }}" class="user-icon">
+                                {% endif %}
+                                <span class="user-tooltip">{{ user.username }}</span>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <button class="btn btn-sm assign-btn" onclick="openAssignUserModal({{ task.id }})">
+                            Assign
+                        </button>
+                    {% endif %}
                 </div>
-            </li>
-        {% endfor %}
-    </ul>
+
+                <button class="btn btn-sm edit-task-btn" style="color: rgb(195, 223, 245);" onclick="openEditTaskModal({{ task.id }}, '{{ task.description }}', {{ task.priority }}, '{{ task.due_date }}', '{{ task.item }}')">
+                    Edit
+                </button>
+            </div>
+        </li>
+    {% endfor %}
+</ul>
     <form action="{{ url_for('main.delete_event', event_id=event.id) }}" method="POST" class="delete-form">
         <input type="hidden" name="_method" value="DELETE">
         <button type="submit" class="btn btn-danger" style ="color: white;">Delete</button>
@@ -401,10 +405,11 @@
         });
       });
     }
-    function openEditTaskModal(taskId, description, priority, dueDate) {
+    function openEditTaskModal(taskId, description, priority, dueDate,item) {
     // Populate the modal with task details
     document.getElementById("editTaskId").value = taskId;
     document.getElementById("editTaskDescription").value = description;
+    document.getElementById("editTaskItem").value = item; // Set item description
     document.getElementById("editTaskPriority").value = priority;
     document.getElementById("editTaskDueDate").value = dueDate || ""; // Set due date or leave empty
 
@@ -417,6 +422,7 @@
 function submitEditTask() {
     const taskId = document.getElementById("editTaskId").value;
     const description = document.getElementById("editTaskDescription").value.trim();
+    const item = document.getElementById("editTaskItem").value.trim(); // Get the item description
     const priority = document.getElementById("editTaskPriority").value;
     const dueDate = document.getElementById("editTaskDueDate").value; // Get the due date
 
@@ -435,6 +441,7 @@ function submitEditTask() {
             description: description,
             priority: priority,
             due_date: dueDate, // Include the due date
+            item: item, // Include the item description
         }),
     })
         .then((response) => response.json())
@@ -466,6 +473,7 @@ function submitEditTask() {
 
     function submitAddTask() {
     const description = document.getElementById('newTaskDescription').value.trim();
+    const item = document.getElementById('newTaskItem').value.trim(); // Get the item 
     const priority = document.getElementById('newTaskPriority').value;
     const dueDate = document.getElementById('newTaskDueDate').value; // Get the due date
 
@@ -482,6 +490,7 @@ function submitEditTask() {
         },
         body: JSON.stringify({
             description: description,
+            item: item, // Include the item description
             priority: priority,
             due_date: dueDate, // Include the due date
             event_id: {{ event.id }},
@@ -715,6 +724,24 @@ function saveTaskChanges(taskId) {
             alert("An error occurred while updating the task.");
         });
 }
+    document.addEventListener("DOMContentLoaded", () => {
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "light") {
+            document.body.classList.add("light-mode");
+        }
+    });
+
+    // Toggle theme on button click
+    document.getElementById("themeToggle").addEventListener("click", () => {
+        document.body.classList.toggle("light-mode");
+
+        // Save the user's preference in localStorage
+        if (document.body.classList.contains("light-mode")) {
+            localStorage.setItem("theme", "light");
+        } else {
+            localStorage.setItem("theme", "dark");
+        }
+    });
 </script>
 
 

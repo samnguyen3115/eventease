@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container mt-4">
-    <h2 class="text-center">Profile</h2>
-    <div class="card mx-auto" style="max-width: 60%; background-color: rgba(20, 21, 22, 0.582);">
+    <h2 class="text-center" style = >Profile</h2>
+    <div class="card mx-auto" style="max-width: 60%; background-color: rgba(255, 255, 255, 0.582);">
         <div class="card-body text-center">
             <!-- Display Profile Picture -->
             <img src="{{ url_for('static', filename=user.profile_picture or 'img/default_profile.png') }}" 
@@ -10,11 +10,30 @@
                  class="rounded-circle mb-3" 
                  style="width: 150px; height: 150px; object-fit: cover;">
 
-            <h5 style = "font-size: x-large;color: white;"> {{ user.username }}</h5>
-            <p style = "color: white;"><strong>Email:</strong> {{ user.email }}</p>
+            <h5 style = "font-size: x-large;color: rgb(0, 0, 0);"> {{ user.username }}</h5>
+            <p style = "color: rgb(0, 0, 0);"><strong>Email:</strong> {{ user.email }}</p>
             <a href="{{ url_for('main.edit_profile') }}" class="btn btn-primary">Edit Profile</a>
+            <button onclick="copyCalendarFeed()" class="btn btn-secondary">Copy Calendar Feed</button>
             <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
         </div>
     </div>
 </div>
+<script>
+    // Function to copy the calendar link to clipboard
+    function copyCalendarFeed() {
+        // Get the URL of the calendar feed
+        const calendarURL = window.location.origin + '/calendar.ics'; // Corrected the URL path
+        
+        // Create a temporary textarea to copy the URL
+        const textarea = document.createElement('textarea');
+        textarea.value = calendarURL; // Set the value to the ICS feed URL
+        document.body.appendChild(textarea); // Append the textarea to the body
+        textarea.select(); // Select the text (URL)
+        document.execCommand('copy'); // Copy the URL to the clipboard
+        document.body.removeChild(textarea); // Remove the textarea
+
+        // Notify the user
+        alert('Calendar feed subscription link copied to clipboard! You can now paste it into another calendar app.');
+    }
+</script>
 {% endblock %}

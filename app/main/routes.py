@@ -1,9 +1,11 @@
 import json
 import re
-from flask import render_template, request, jsonify, flash, redirect, url_for
+from flask import Response, render_template, request, jsonify, flash, redirect, url_for
 from flask_login import login_required
 import google.generativeai as genai
 import os
+from ics import Calendar
+from ics import Event as IcsEvent
 from app import db
 from flask_login import current_user
 from app.main.models import Event, Task, User, event_participants
@@ -13,7 +15,7 @@ from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 from app.main.forms import ProfileForm
 from flask import current_app
-from datetime import datetime
+from datetime import datetime,timedelta
 
 UPLOAD_FOLDER = 'static/profile_pics'  # Define where images should be stored
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -27,7 +29,10 @@ def allowed_file(filename):
 
 @bp_main.route('/', methods=['GET'])
 def root():
-    return redirect(url_for('main.chatbot'))
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))  
+    else:
+        return redirect(url_for('main.chatbot')) 
 
 
 @bp_main.route('/index', methods=['GET', 'POST'])
@@ -102,7 +107,7 @@ def create_event_and_tasks():
         if not conversation_history:
             # Initial prompt, ask the first clarifying question
             prompt = f"""
-            Based on the following event description: "{user_input}", ask ONE clarifying question to help me generate a more specific checklist.
+            Based on the following event description: "{user_input}", ask ONE clarifying question to help me generate a more specific checklist.Remember not to ask anything the user have mention in "{user_input}"
             Return ONLY the question.
             """
         else:
@@ -111,19 +116,22 @@ def create_event_and_tasks():
                 prompt = f"""
                 Based on the following conversation:
                 {conversation_history}
-                Ask ONE more clarifying question. Return ONLY the question.
+                Ask them what they want to prioritize in the event, what aspects they want the most. Return ONLY the question and the suggestions, please format it to look better.
+                Remember not to ask anything the user have mention in the chat: {conversation_history}
                 """
             else:
                 # Generate the checklist after all questions are answered
                 prompt = f"""
                 Based on the following conversation:
                 {conversation_history}
-                Generate a JSON checklist. Include keys for 'task', 'priority' (1:important/2:necessary/3:normal).
+                Generate a JSON checklist with at least 8 tasks with this topic "{event.name}".Remember to just give task as pre-event tasks. Include keys for 'task', 'priority' (1:important/2:necessary/3:normal) the priority should focus on the event - important aspect that user declare before in "{conversation_history}",'due_date' (optional, just for important tasks, just have this for if user already declare the event date),'item'(just for things. Example task is "Bring passport". item is "passport").
 
                 Example JSON output:
                 [
-                    {{"task": "Book flights", "priority": 1}},
-                    {{"task": "Pack sunscreen", "priority": 2}}
+                    {{"task": "Book flights", "priority": 1, "due_date": "2023-10-01", "item": "none"}},
+                    {{"task": "Pack sunscreen", "priority": 2, "due_date": "2023-10-02", "item": "sunscreen"}},
+                    {{"task": "Buy snacks", "priority": 3, "due_date": "2023-10-03", "item": "snacks"}},
+                    
                 ]
 
                 Return ONLY the JSON. Do not include any other text or explanations, and do not wrap the JSON in markdown code blocks.
@@ -149,6 +157,8 @@ def create_event_and_tasks():
                     description=task_data.get(
                         'task', 'No description provided'),
                     priority=task_data.get('priority', 3),
+                    due_date=task_data.get('due_date', None),
+                    item=task_data.get('item', None),
                     event_id=event_id
                 )
                 db.session.add(task)
@@ -418,11 +428,16 @@ def edit_task(task_id):
 
     if not task:
         return jsonify({"success": False, "error": "Task not found"}), 404
-
+    
     task.description = data.get('description', task.description)
     task.priority = data.get('priority', task.priority)
-    task.due_date = data.get('due_date', task.due_date)  # Update the due date
-
+    print (data.get('due_date'))
+    if data.get('due_date'):
+        task.due_date = data.get('due_date', task.due_date)  # Update the due date
+    if data.get('item'):
+        task.item = data.get('item', task.item)  # Update the item
+    else:
+        task.item = None
     db.session.commit()
     return jsonify({"success": True, "message": "Task updated successfully"})
 
@@ -432,6 +447,7 @@ def edit_task(task_id):
 def add_task():
     data = request.get_json()
     description = data.get('description')
+    item = data.get('item')  # Get the item
     priority = data.get('priority')
     due_date = data.get('due_date')  # Get the due date
     event_id = data.get('event_id')
@@ -443,10 +459,13 @@ def add_task():
     new_task = Task(
         description=description,
         priority=priority,
-        due_date=due_date,  # Set the due date
         event_id=event_id,
         completed=False
     )
+    if(due_date):
+        new_task.due_date = datetime.strptime(due_date, '%Y-%m-%d')
+    if item:
+        new_task.item = item
     db.session.add(new_task)
     db.session.commit()
 
@@ -565,3 +584,30 @@ def edit_profile():
 
     # Render the edit profile form for GET requests
     return render_template('edit_profile.html', form=form, user=current_user)
+
+@bp_main.route('/calender.ics', methods=['GET'])
+def calender_feed():
+    token = request.args.get('token')
+    if token != "your_secure_token":
+        return "Unauthorized", 401
+    # Fetch tasks assigned to the current user
+    tasks = db.session.scalars(
+        sqla.select(Task).where(Task.assigned_users.any(User.id == current_user.id))
+    ).all()
+
+    calendar = Calendar()  # Create a new calendar
+
+    for task in tasks:
+        if task.due_date is not None:
+            # Create an event for each task
+            e = IcsEvent()
+            e.name = task.description  # Set the name of the event
+            e.begin = task.due_date  # Set the start time of the event
+            e.end = task.due_date + timedelta(days=1)  # Set the end time (1 day duration)
+            e.priority = task.priority  # Add priority (customize as needed)
+            e.description = task.event.name if task.event else 'No Event Description'  # Add description
+
+            calendar.events.add(e)  # Add the event to the calendar
+                # Return the calendar feed as a response
+    return Response(str(calendar), mimetype="text/calendar")
+

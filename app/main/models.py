@@ -85,6 +85,7 @@ class Task(db.Model):
     event_id: sqlo.Mapped[int] = sqlo.mapped_column(sqla.Integer, sqla.ForeignKey('event.id', ondelete="CASCADE"))
     event: sqlo.Mapped["Event"] = sqlo.relationship("Event", back_populates="tasks")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    item = db.Column(db.String(100), nullable=True)
 
     # Add passive_deletes=True to handle delete operations without loading the relationship
     assigned_users: sqlo.Mapped[list["User"]] = sqlo.relationship(

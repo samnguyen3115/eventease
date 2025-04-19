@@ -65,6 +65,7 @@ class Event(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"))
     user = db.relationship("User", back_populates="events")
     tasks = db.relationship("Task", back_populates="event", cascade="all, delete-orphan")
+    strict_mode = db.Column(db.Boolean, default=False,nullable = True)  # New field for strict mode
 
     def __repr__(self):
         return f"<Event id={self.id} name={self.name}>"

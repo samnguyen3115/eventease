@@ -5,7 +5,7 @@
     <div class="card mx-auto" style="max-width: 60%; background-color: rgba(255, 255, 255, 0.582);">
         <div class="card-body text-center">
             <!-- Display Profile Picture -->
-            <img src="{{ url_for('static', filename=user.profile_picture or 'img/default_profile.png') }}" 
+            <img src="{{ url_for('static', filename=current_user.profile_picture or 'img/user.png') }}" 
                  alt="Profile Picture" 
                  class="rounded-circle mb-3" 
                  style="width: 150px; height: 150px; object-fit: cover;">

@@ -18,7 +18,7 @@ from app.main.forms import ProfileForm
 from flask import current_app
 from datetime import datetime,timedelta
 from ultralytics import YOLO
-from PIL import Image
+from PIL import Image # type: ignore
 import numpy as np
 from io import BytesIO
 from transformers import BlipProcessor, BlipForConditionalGeneration
@@ -315,7 +315,7 @@ def checklist_detail(event_id):
     current_date = datetime.today()
     print("Retrieved Users:", users)
     # Render the checklist.html template with the event and tasks
-    return render_template('checklist.html', event=event, tasks=tasks, users=users, current_date=current_date)
+    return render_template('checklist.html', event=event, tasks=tasks, users=users, current_date=current_date,strict_mode=event.strict_mode)
 
 
 @bp_main.route('/get_event/<int:event_id>')
@@ -693,7 +693,8 @@ def complete_task_with_image(task_id):
                     "caption": caption,
                     "related": True
                 })
-
+            task.completed = False
+            db.session.commit()
             return jsonify({
                 "success": False,
                 "message": f"The required item '{task.item}' was not found in the image.",
@@ -703,6 +704,37 @@ def complete_task_with_image(task_id):
 
         except Exception as e:
             return jsonify({"error": f"An error occurred while using Generative AI: {str(e)}"}), 500
+
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+    
+@bp_main.route('/strict_mode/<int:event_id>', methods=['POST'])
+@login_required
+def strict_mode(event_id):
+    try:
+        # Parse the incoming JSON data
+        data = request.get_json()
+        if data is None or 'strict_mode' not in data:
+            return jsonify({"error": "Missing 'strict_mode' field in the request."}), 400
+
+        strict_mode = data.get('strict_mode')
+        if not isinstance(strict_mode, bool):
+            return jsonify({"error": "'strict_mode' must be a boolean value."}), 400
+
+        # Find the event
+        event = db.session.get(Event, event_id)
+        if not event:
+            return jsonify({"error": "Event not found."}), 404
+
+        # Update the strict mode status
+        event.strict_mode = strict_mode
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": f"Strict mode {'enabled' if strict_mode else 'disabled'} successfully!",
+            "strict_mode": event.strict_mode
+        })
 
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500

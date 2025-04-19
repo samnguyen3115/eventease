@@ -1,19 +1,23 @@
 {% extends "base.html" %} {% block content %}
-<!-- Modal for Completing Task with Image -->
-<div id="completeTaskModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="completeTaskModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
+<!-- Modal for verify Task with Image -->
+<div id="verifyTaskModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="verifyTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document" > 
+        <div class="modal-content" style="background-color: #f5f8fb; color :black">
             <div class="modal-header">
-                <h5 class="modal-title" id="completeTaskModalLabel">Complete Task</h5>
+                <h5 class="modal-title" id="verifyTaskModalLabel">Complete Task</h5>
             </div>
             <div class="modal-body">
-                <form id="completeTaskForm" enctype="multipart/form-data">
+                <form id="verifyTaskForm" style="background-color: #f5f8fb; color :black" enctype="multipart/form-data">
                     <input type="hidden" id="taskId" name="taskId">
                     <div class="form-group">
                         <label for="taskImage">Upload an Image of the Item</label>
-                        <input type="file" class="form-control" id="taskImage" name="file" accept="image/*" required>
+                        <input type="file" class="form-control" style="background-color: #f5f8fb; color :black" id="taskImage" name="file" accept="image/*" required>
                     </div>
+                </br>
+                <div class="modal-footer d-flex justify-content-between">
                     <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
+                </div>
                 </form>
             </div>
         </div>
@@ -52,7 +56,7 @@
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer d-flex justify-content-between">
                 <button type="button" class="btn btn-primary" onclick="submitAddTask()">Add Task</button>
                 <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
             </div>
@@ -87,7 +91,7 @@
                     <input type="hidden" id="assignTaskId"> <!-- Hidden input to store the task ID -->
                 </form>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer d-flex justify-content-between">
                 <button type="button" class="btn btn-primary" onclick="submitAssignUser()">Assign</button>
                 <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
             </div>
@@ -110,7 +114,7 @@
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer d-flex justify-content-between">
                     <button type="button" class="btn btn-primary" onclick="submitAssignUserToEvent()">Assign</button>
                     <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
                 </div>
@@ -150,7 +154,7 @@
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer d-flex justify-content-between">
                 <button type="button" class="btn btn-primary" onclick="submitEditTask()">Save Changes</button>
                 <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
             </div>
@@ -181,6 +185,13 @@
     <div class="progress-bar-container">
         <div class="progress-bar">
             <div class="progress-bar-fill" style="width: 0%;"></div>
+        </div>
+        <div class="strict-mode-toggle" style="margin: 10px;">
+            <label for="strictModeToggle" style="font-weight: bold;color:black">Strict Mode:</label>
+            <label class="switch">
+                <input type="checkbox" id="strictModeToggle" onchange="toggleStrictMode()">
+                <span class="slider round"></span>
+            </label>
         </div>
     </div>
      
@@ -227,11 +238,8 @@
                     {% endif %}
                 </div>
 
-                <button class="btn btn-sm edit-task-btn" style="color: rgb(195, 223, 245);" onclick="openEditTaskModal({{ task.id }}, '{{ task.description }}', {{ task.priority }}, '{{ task.due_date }}', '{{ task.item }}')">
+                <button class="btn btn-sm edit-task-btn" style="background-color: rgb(195, 223, 245);" onclick="openEditTaskModal({{ task.id }}, '{{ task.description }}', {{ task.priority }}, '{{ task.due_date }}', '{{ task.item }}')">
                     Edit
-                </button>
-                <button class="btn btn-sm btn-success" onclick="openCompleteTaskModal({{ task.id }})">
-                    Complete Task
                 </button>
             </div>
         </li>
@@ -246,6 +254,17 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const eventId = {{ event.id }};
+    const tasks = {
+        {% for task in tasks %}
+        "{{ task.id }}": {
+            "item": "{{ task.item }}",
+            "description": "{{ task.description }}",
+            "priority": {{ task.priority }},
+            "completed": {{ 'true' if task.completed else 'false' }}
+        },
+        {% endfor %}
+    };
+    const strictModeEnabled = {{ strict_mode | tojson }};
     // Initialize the progress bar
     function initializeProgressBar(card) {
       const checkboxes = card.querySelectorAll('input.custom-checkbox');
@@ -274,12 +293,18 @@
     }
   
     // Save the checkbox state to the database
-    function saveTaskState(checkbox) {
+    function saveTaskState(checkbox) { 
       const taskId = checkbox.value;
+      const task = tasks[taskId]; // Retrieve the task object
+      const taskItem = task ? task.item : null; // Get task.item  
+      console.log("Task Item:", taskItem); // Use taskItem as needed
       const completed = checkbox.checked;
-  
+      
+      if (completed && strictModeEnabled && taskItem != "none"){
+        openverifyTaskModal(taskId); // Open the modal if strict mode is enabled
+      }
       // Send an AJAX request to update the task status
-      fetch(`/update_task/${taskId}`, {
+      else{fetch(`/update_task/${taskId}`, {
           method: "POST",
           headers: {
               "Content-Type": "application/json",
@@ -298,7 +323,8 @@
           .catch((error) => {
               console.error("Error:", error);
               alert("An error occurred while updating the task status.");
-          });
+          });}
+      
   }
   
     // Initialize checkbox listeners
@@ -488,6 +514,7 @@ function submitEditTask() {
         $("#addTaskModal").modal("hide");
         $("#assignUserToEventModal").modal("hide");
         $("#editTaskModal").modal("hide");
+        $("#verifyTaskModal").modal("hide");
 
     }
     function openAddTaskModal() {
@@ -748,6 +775,16 @@ function saveTaskChanges(taskId) {
             alert("An error occurred while updating the task.");
         });
 }
+document.addEventListener("DOMContentLoaded", () => {
+    // Attach the event listener to all modals
+    const modals = document.querySelectorAll(".modal");
+    modals.forEach((modal) => {
+        $(modal).on("hidden.bs.modal", () => {
+            console.log("Modal closed. Reloading the page...");
+            location.reload(); // Reload the page when the modal is closed
+        });
+    });
+});
     document.addEventListener("DOMContentLoaded", () => {
         const savedTheme = localStorage.getItem("theme");
         if (savedTheme === "light") {
@@ -756,14 +793,14 @@ function saveTaskChanges(taskId) {
     });
 
     // Open the modal and set the task ID
-    function openCompleteTaskModal(taskId) {
+    function openverifyTaskModal(taskId) {
         document.getElementById('taskId').value = taskId;
-        $('#completeTaskModal').modal('show');
+        $('#verifyTaskModal').modal('show');
         $('.modal-backdrop').remove(); // Remove the backdrop to prevent it from closing the modal
     }
 
     // Handle form submission
-    document.getElementById('completeTaskForm').addEventListener('submit', function (e) {
+    document.getElementById('verifyTaskForm').addEventListener('submit', function (e) {
         e.preventDefault();
 
         const formData = new FormData(this);
@@ -780,6 +817,7 @@ function saveTaskChanges(taskId) {
                 location.reload(); // Reload the page to reflect changes
             } else {
                 alert(data.error);
+                location.reload(); // Reload the page to reflect changes
             }
         })
         .catch(error => {
@@ -787,7 +825,70 @@ function saveTaskChanges(taskId) {
             alert('An error occurred while completing the task.');
         });
     });
-    
+    document.addEventListener("DOMContentLoaded", () => {
+        const strictModeEnabled = localStorage.getItem("strictMode") === "true";
+        document.getElementById("strictModeToggle").checked = strictModeEnabled;
+
+        // Apply strict mode if enabled
+        if (strictModeEnabled) {
+            enableStrictMode();
+        } else {
+            disableStrictMode();
+        }
+    });
+
+    // Toggle Strict Mode
+    function toggleStrictMode() {
+        const strictModeEnabled = document.getElementById("strictModeToggle").checked;
+
+        // Send an AJAX request to update the strict mode status on the server
+        fetch(`/strict_mode/${eventId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ strict_mode: strictModeEnabled }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log(data.message);
+                if (strictModeEnabled) {
+                    enableStrictMode();
+                } else {
+                    disableStrictMode();
+                }
+                location.reload(); // Reload the page to reflect changes
+                localStorage.setItem("strictMode", strictModeEnabled);
+                
+            } else {
+                alert(data.error || "Failed to update strict mode.");
+                // Revert the toggle state if the update fails
+                document.getElementById("strictModeToggle").checked = !strictModeEnabled;
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred while updating strict mode.");
+            // Revert the toggle state if an error occurs
+            document.getElementById("strictModeToggle").checked = !strictModeEnabled;
+        });
+
+        // Save the state in localStorage
+        localStorage.setItem("strictMode", strictModeEnabled);
+    }
+
+    // Enable Strict Mode
+    function enableStrictMode() {
+        console.log("Strict Mode Enabled");
+        document.body.classList.add("strict-mode");
+    }
+
+    // Disable Strict Mode
+    function disableStrictMode() {
+        console.log("Strict Mode Disabled");
+        document.body.classList.remove("strict-mode");
+    }
 </script>
 
 

@@ -18,3 +18,4 @@ tfenv/
 *.ckpt
 *.tfrecord
 *.env
+*app\static\evvent-459023-9eb43c5a043a.json

@@ -27,3 +27,4 @@ tfenv/
 **/*-service-account.json
 app\static\evvent-459023-9eb43c5a043a.json
 evvent-459023-9eb43c5a043a.json
+.yolov8n.pt

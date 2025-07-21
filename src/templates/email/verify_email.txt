@@ -1,0 +1,17 @@
+Hello {{ user.username }},
+
+Thank you for registering with EventEase!
+
+To complete your registration, please verify your email address by clicking the link below:
+
+{{ url_for('auth.verify_email', token=token, _external=True) }}
+
+This link will expire in 24 hours for security reasons.
+
+If you did not create an account with EventEase, please ignore this email.
+
+Best regards,
+The EventEase Team
+
+---
+This is an automated message, please do not reply to this email.

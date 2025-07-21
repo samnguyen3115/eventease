@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Sign In</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Display flash messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form action="{{ url_for('auth.login') }}" method="POST">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Email Field -->
+                        <div class="form-group mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control", placeholder="Enter your email") }}
+                            {% if form.email.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.email.errors %}
+                                        <small>{{ error }}</small><br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Password Field -->
+                        <div class="form-group mb-3">
+                            {{ form.password.label(class="form-label") }}
+                            {{ form.password(class="form-control", placeholder="Enter your password") }}
+                            {% if form.password.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.password.errors %}
+                                        <small>{{ error }}</small><br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Remember Me Checkbox -->
+                        <div class="form-check mb-3">
+                            {{ form.remember_me(class="form-check-input") }}
+                            <label class="form-check-label" for="remember_me">{{ form.remember_me.label }}</label>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+
+                    <!-- Additional Links -->
+                    <div class="text-center mt-3">
+                        <p>
+                            <a href="{{ url_for('auth.request_password_reset') }}">Forgot your password?</a>
+                        </p>
+                        <p>
+                            Don't have an account? <a href="{{ url_for('auth.register') }}">Sign up</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    input.form-control {
+        background-color: #ffffff; /* Black background */
+        color: #000000; /* White text */
+        border: 2px solid #000000; /* Blue border */
+        border-radius: 5px; /* Rounded corners */
+        padding: 10px; /* Add padding inside the input box */
+        font-size: 16px; /* Increase font size */
+    }
+
+    /* Style for input fields when focused */
+    input.form-control:focus {
+        background-color: #ffffff; /* Darker black when focused */
+        border-color: #000000; /* Darker blue border when focused */
+        outline: none; /* Remove default outline */
+    }
+
+    /* Style for the checkbox */
+    input.form-check-input {
+        width: 20px;
+        height: 20px;
+        background-color: #ffffff; /* Black background */
+        border: 2px solid #000000; /* Blue border */
+    }
+
+    /* Style for the checkbox when checked */
+    input.form-check-input:checked {
+        background-color: #000000; /* Blue background when checked */
+        border-color: hsl(0, 0%, 0%); /* Darker blue border when checked */
+    }
+    .btn-custom {
+        background-color: #000000; /* Blue background */
+        color: #ffffff; /* White text */
+        border-radius: 5px; /* Rounded corners */
+        padding: 10px 20px; /* Add padding */
+        font-size: 18px; /* Larger font size */
+        transition: background-color 0.3s, border-color 0.3s; /* Smooth transition */
+    }
+
+    .btn-custom:hover {
+        transform: scale(1.1);
+
+    }
+    .new-user-link {
+        color: #000000; /* Blue text */
+        text-decoration: none; /* Remove underline */
+        font-weight: bold;
+    }
+
+    .new-user-link:hover {
+        text-decoration: underline; /* Add underline on hover */
+    }
+
+</style>
+
+<div class="text-center mt-3">
+    <p>New User? <a href="{{ url_for('auth.register') }}" class="new-user-link">Click to register!</a></p>
+</div>
+{% endblock %}

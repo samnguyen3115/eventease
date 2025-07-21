@@ -1,0 +1,19 @@
+Hello {{ user.username }},
+
+Welcome to EventEase! Your email has been successfully verified.
+
+You can now:
+- Create and manage events
+- Collaborate with friends on tasks
+- Track progress with our AI-powered features
+- Use image verification for task completion
+
+Start organizing your first event at: {{ url_for('main.index', _external=True) }}
+
+Thank you for joining EventEase!
+
+Best regards,
+The EventEase Team
+
+---
+This is an automated message, please do not reply to this email.

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Welcome to EventEase!</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #000000; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background-color: #f8f9fa; padding: 30px; border-radius: 0 0 8px 8px; }
+        .feature { background-color: white; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #28a745; }
+        .button { display: inline-block; background-color: #000000; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 20px; font-size: 20px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Welcome to EventEase!</h1>
+        </div>
+        <div class="content">
+            <h2>Hello {{ user.username }},</h2>
+            
+            <p>Congratulations! Your email has been successfully verified and your EventEase account is now active.</p>
+            
+            <h3>What you can do now:</h3>
+            
+            <div class="feature">
+                <strong>📅 Create and Manage Events</strong><br>
+                Organize any type of event with our intelligent task generation
+            </div>
+            
+            <div class="feature">
+                <strong>👥 Collaborate with Friends</strong><br>
+                Add friends and work together on shared events and tasks
+            </div>
+            
+            <div class="feature">
+                <strong>🤖 AI-Powered Features</strong><br>
+                Let our AI help generate task lists and verify task completion
+            </div>
+            
+            <div class="feature">
+                <strong>📸 Image Verification</strong><br>
+                Complete tasks by taking photos that our AI will verify
+            </div>
+            
+            <p style="text-align: center;">
+                <a href="{{ url_for('main.index', _external=True) }}" class="button">Start Organizing Events</a>
+            </p>
+            
+            <p>Thank you for joining EventEase! We're excited to help you organize amazing events.</p>
+            
+            <p>Best regards,<br>The EventEase Team</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message, please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>

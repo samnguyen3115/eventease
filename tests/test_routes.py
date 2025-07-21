@@ -7,8 +7,8 @@ Resources:
 """
 import os
 import pytest
-from app import create_app, db
-from app.main.models import User, Post, Tag
+from src import create_app, db
+from src.database.models import User, Post, Tag
 from config import Config
 import sqlalchemy as sqla
 

@@ -5,6 +5,7 @@ Flask-Moment
 Flask-SQLAlchemy
 Flask-Migrate
 Flask-WTF
+Flask-Mail
 Jinja2
 Werkzeug
 WTForms

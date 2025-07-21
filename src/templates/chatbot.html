@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block content %}
+<head>
+    <title>Event Planner Chat</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+    <div id="chat-wrapper">
+        <div id="chat-header">
+            <h1>Event Planner Assistant</h1>
+        </div>
+        <div id="chat-container"></div>
+        <div id="input-container">
+            <input type="text" id="chat-input" placeholder="Type your message...">
+            <button id="chat-send-button">Send</button>
+            
+        </div>
+    </div>
+
+    <script>
+    const isAuthenticated = {{ current_user.is_authenticated | tojson }};
+    console.log(isAuthenticated);
+    const chatContainer = document.getElementById('chat-container');
+    const chatInput = document.getElementById('chat-input');
+    const chatSendButton = document.getElementById('chat-send-button');
+    const micButton = document.createElement('button'); // Add a microphone button
+    micButton.textContent = '🎤';
+    micButton.id = 'mic-button';
+    document.getElementById('input-container').appendChild(micButton); // Append the button to the input container
+
+    let eventId = null;
+    let eventCreationMode = isAuthenticated; // Only enable event creation mode if the user is authenticated
+    let conversationHistory = [];
+    let questionIndex = 0;
+
+    function startDictation() {
+        if ('webkitSpeechRecognition' in window) {
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = "en-US";
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                chatInput.value = transcript; // Populate the input field with the transcript
+                appendMessage('You', transcript); // Append the message to the chat
+                chatSendButton.click(); // Automatically send the message
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech recognition error:", event.error);
+                appendMessage('Bot', 'Sorry, I could not understand what you said. Please try again.');
+            };
+
+            recognition.start();
+        } else {
+            alert("Speech recognition is not supported in this browser.");
+        }
+    }
+
+    micButton.addEventListener('click', startDictation);
+        function appendMessage(sender, message, isList = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender === 'You' ? 'user' : 'bot');
+
+            if (isList) {
+                // Format the message as a list
+                const list = document.createElement('ul');
+                const items = message.split('\n').filter(item => item.trim() !== '');
+                items.forEach(item => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = item.trim();
+                    list.appendChild(listItem);
+                });
+                messageDiv.appendChild(list);
+            } else {
+                messageDiv.textContent = message;
+            }
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        chatSendButton.addEventListener('click', () => {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            appendMessage('You', message);
+            chatInput.value = '';
+
+            if (isAuthenticated) {
+                if(eventCreationMode){
+                    if (eventId === null) {
+                        fetch('/event_router/create_event', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ eventName: message }),
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.eventId) {
+                                eventId = data.eventId;
+                                appendMessage('Bot', `Please provide more details about the event.`);
+                            } else if (data.error) {
+                                appendMessage('Bot', `Error: ${data.error}`);
+                                eventCreationMode = false;
+                            }
+                        });
+                    } else {
+                        let requestBody = { event_id: eventId, userInput: message, question_index: questionIndex };
+    
+                        if (conversationHistory.length > 0) {
+                            requestBody.conversation_history = conversationHistory;
+                        }
+    
+                        fetch('create_event_and_tasks', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(requestBody),
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.message) {
+                                appendMessage('Bot', data.message);
+                                eventCreationMode = false;
+                                conversationHistory = [];
+                                questionIndex = 0;
+                                const redirectButton = document.createElement('button');
+                                redirectButton.textContent = 'Go to Event';
+                                redirectButton.classList.add('redirect-button');
+                                redirectButton.addEventListener('click', () => {
+                                    window.location.href = `/task_router/checklist_detail/${eventId}`;
+                                });
+                                chatContainer.appendChild(redirectButton);
+                                chatContainer.scrollTop = chatContainer.scrollHeight;
+                            } else if (data.question) {
+                                appendMessage('Bot', data.question);
+                                conversationHistory.push(`User: ${message}`);
+                                conversationHistory.push(`Bot: ${data.question}`);
+                                questionIndex = data.question_index;
+                            } else if (data.error) {
+                                appendMessage('Bot', `Error: ${data.error}`);
+                                eventCreationMode = false;
+                                conversationHistory = [];
+                                questionIndex = 0;
+                            }
+                        });
+                    }    
+                }else {
+                    fetch('chatbot_router//chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ message: message, event_id: eventId }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.response) {
+                            appendMessage('Bot', data.response);
+                        } else if (data.error) {
+                            appendMessage('Bot', `Error: ${data.error}`);
+                        }
+                    })
+                    .catch(error => {
+                        appendMessage('Bot', `Network error: ${error}`);
+                    });
+                }
+            } else {
+                // Unauthenticated user: Generate checklist directly
+                fetch('chatbot_router//chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.response) {
+                        // Format the response as a list
+                        const formattedResponse = data.response
+                            .split('- ')
+                            .filter(item => item.trim() !== '')
+                            .map(item => ` ${item.trim()}`)
+                            .join('\n');
+                        appendMessage('Bot', formattedResponse, true);
+                    } else if (data.error) {
+                        appendMessage('Bot', `Error: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    appendMessage('Bot', `Network error: ${error}`);
+                });
+            }
+        });
+
+        chatInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                chatSendButton.click();
+            }
+        });
+
+        // Initial bot message
+        if (isAuthenticated) {
+            appendMessage('Bot', 'Hi, What is your event name?');
+        } else {
+            appendMessage('Bot', 'Hi, I am a bot that can help you with event planning. Please provide detail information of what event you wanna do.');
+        }
+    </script>
+</body>
+{% endblock %}
+</html>

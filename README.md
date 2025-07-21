@@ -6,7 +6,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/samnguyen3115/eventtask">
-    <img src="src/static/img/add_event.png" alt="Logo" width="80" height="80">
+    <img src="src/static/img/eventease.png" alt="Logo" width="80" height="80">
   </a>
 
 <h3 align="center">EventEase</h3>
@@ -233,14 +233,19 @@ EventEase provides multiple interfaces for event management and task coordinatio
 <!-- ROADMAP -->
 ## Roadmap
 
-- [x] Core event management system
-- [x] AI-powered task generation
-- [x] Image verification system
-- [x] Calendar export functionality
-- [ ] Mobile application development
-- [ ] Advanced analytics dashboard
-- [ ] Third-party integrations (Slack, Teams)
-- [ ] API documentation and SDK
+### Completed Features
+- [x] **Core event management system** - Complete event lifecycle management
+- [x] **AI-powered task generation** - Intelligent task creation with Gemini AI
+- [x] **Image verification system** - Computer vision task validation
+- [x] **Calendar export functionality** - ICS format calendar integration
+
+### In Development
+- [ ] **Mobile application development** - iOS and Android native apps
+- [ ] **Advanced analytics dashboard** - Real-time insights and reporting
+
+### Planned Features
+- [ ] **Third-party integrations** - Slack, Microsoft Teams connectivity
+- [ ] **API documentation and SDK** - Developer tools and resources
     - [ ] REST API specification
     - [ ] Python SDK
     - [ ] JavaScript SDK
@@ -314,7 +319,7 @@ Project Link: [https://github.com/samnguyen3115/eventtask](https://github.com/sa
 [license-url]: https://github.com/samnguyen3115/eventtask/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/your-linkedin
-[product-screenshot]: src/static/img/screenshot.png
+[product-screenshot]: src/static/img/eventease_screenshot.png
 [Flask.py]: https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white
 [Flask-url]: https://flask.palletsprojects.com/
 [Python.py]: https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white

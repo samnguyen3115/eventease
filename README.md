@@ -5,7 +5,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/samnguyen3115/eventtask">
+  <a href="https://github.com/samnguyen3115/eventease">
     <img src="src/static/img/eventease.png" alt="Logo" width="80" height="80">
   </a>
 
@@ -15,9 +15,9 @@
     An intelligent event management and task orchestration platform powered by AI
     <br />
     <br />
-    <a href="https://github.com/samnguyen3115/eventtask/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    <a href="https://github.com/samnguyen3115/eventease/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
-    <a href="https://github.com/samnguyen3115/eventtask/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+    <a href="https://github.com/samnguyen3115/eventease/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 </div>
 
@@ -51,7 +51,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![EventEase Screenshot][product-screenshot]](https://github.com/samnguyen3115/eventtask)
+[![EventEase Screenshot][product-screenshot]](https://github.com/samnguyen3115/eventease)
 
 EventEase is a comprehensive event management platform that leverages artificial intelligence to streamline event planning and task management. Built with Flask and powered by Google's Gemini AI, it offers intelligent task generation, collaborative planning, and advanced verification systems for professional event coordination.
 
@@ -107,12 +107,12 @@ Ensure you have the following installed on your system:
 
 2. **Clone the repository**
    ```sh
-   git clone https://github.com/samnguyen3115/eventtask.git
+   git clone https://github.com/samnguyen3115/eventease.git
    ```
 
 3. **Navigate to project directory**
    ```sh
-   cd eventtask
+   cd eventease
    ```
 
 4. **Create virtual environment**
@@ -144,7 +144,7 @@ Ensure you have the following installed on your system:
    ```env
    SECRET_KEY=your-secret-key-here
    GEMINI_API_KEY=your-gemini-api-key
-   DATABASE_URL=sqlite:///eventtask.db
+   DATABASE_URL=sqlite:///eventease.db
    MAIL_SERVER=smtp.gmail.com
    MAIL_PORT=587
    MAIL_USERNAME=your-email@example.com
@@ -162,7 +162,7 @@ Ensure you have the following installed on your system:
 
 10. **Start the application**
     ```sh
-    python eventtask.py
+    python eventease.py
     ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -250,7 +250,7 @@ EventEase provides multiple interfaces for event management and task coordinatio
     - [ ] Python SDK
     - [ ] JavaScript SDK
 
-See the [open issues](https://github.com/samnguyen3115/eventtask/issues) for a full list of proposed features and known issues.
+See the [open issues](https://github.com/samnguyen3115/eventease/issues) for a full list of proposed features and known issues.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -291,7 +291,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 Tran Minh Duc Nguyen - [@samnguyen3115](https://github.com/samnguyen3115) - ducsam.work@gmail.com
 
-Project Link: [https://github.com/samnguyen3115/eventtask](https://github.com/samnguyen3115/eventtask)
+Project Link: [https://github.com/samnguyen3115/eventease](https://github.com/samnguyen3115/eventease)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -307,16 +307,16 @@ Project Link: [https://github.com/samnguyen3115/eventtask](https://github.com/sa
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
-[contributors-shield]: https://img.shields.io/github/contributors/samnguyen3115/eventtask.svg?style=for-the-badge
-[contributors-url]: https://github.com/samnguyen3115/eventtask/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/samnguyen3115/eventtask.svg?style=for-the-badge
-[forks-url]: https://github.com/samnguyen3115/eventtask/network/members
-[stars-shield]: https://img.shields.io/github/stars/samnguyen3115/eventtask.svg?style=for-the-badge
-[stars-url]: https://github.com/samnguyen3115/eventtask/stargazers
-[issues-shield]: https://img.shields.io/github/issues/samnguyen3115/eventtask.svg?style=for-the-badge
-[issues-url]: https://github.com/samnguyen3115/eventtask/issues
-[license-shield]: https://img.shields.io/github/license/samnguyen3115/eventtask.svg?style=for-the-badge
-[license-url]: https://github.com/samnguyen3115/eventtask/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/samnguyen3115/eventease.svg?style=for-the-badge
+[contributors-url]: https://github.com/samnguyen3115/eventease/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/samnguyen3115/eventease.svg?style=for-the-badge
+[forks-url]: https://github.com/samnguyen3115/eventease/network/members
+[stars-shield]: https://img.shields.io/github/stars/samnguyen3115/eventease.svg?style=for-the-badge
+[stars-url]: https://github.com/samnguyen3115/eventease/stargazers
+[issues-shield]: https://img.shields.io/github/issues/samnguyen3115/eventease.svg?style=for-the-badge
+[issues-url]: https://github.com/samnguyen3115/eventease/issues
+[license-shield]: https://img.shields.io/github/license/samnguyen3115/eventease.svg?style=for-the-badge
+[license-url]: https://github.com/samnguyen3115/eventease/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/your-linkedin
 [product-screenshot]: src/static/img/eventease_screenshot.png

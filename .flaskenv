@@ -1,2 +1,2 @@
-FLASK_APP=eventtask.py
+FLASK_APP=eventease.py
 FLASK_DEBUG=1

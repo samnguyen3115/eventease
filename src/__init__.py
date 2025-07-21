@@ -52,6 +52,18 @@ def create_app(config_class=Config):
     auth.template_folder = Config.TEMPLATE_FOLDER_AUTH
     app.register_blueprint(auth)
     
+    # Register API blueprints
+    from src.api.chatbot import chatbot_router
+    app.register_blueprint(chatbot_router)
+    chatbot_router.template_folder = Config.TEMPLATE_FOLDER_MAIN
+    
+    from src.api.event import event_router
+    app.register_blueprint(event_router)
+    event_router.template_folder = Config.TEMPLATE_FOLDER_MAIN
+    
+    from src.api.task import task_router
+    app.register_blueprint(task_router)
+    task_router.template_folder = Config.TEMPLATE_FOLDER_MAIN
 
 
     return app

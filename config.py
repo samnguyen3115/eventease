@@ -24,4 +24,4 @@ class Config(object):
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or os.environ.get('MAIL_USERNAME')
     
     # Admin settings
-    ADMINS = [os.environ.get('MAIL_USERNAME') or 'admin@eventtask.com']    
+    ADMINS = [os.environ.get('MAIL_USERNAME') or 'admin@eventease.com']    

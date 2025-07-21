@@ -21,15 +21,6 @@ if missing_vars:
 
 app = create_app(Config)
 
-from src.api.chatbot import chatbot_router
-from src.api.event import event_router
-from src.api.task import task_router
-app.register_blueprint(chatbot_router)
-app.register_blueprint(event_router)
-app.register_blueprint(task_router)
-chatbot_router.template_folder = Config.TEMPLATE_FOLDER_MAIN
-event_router.template_folder = Config.TEMPLATE_FOLDER_MAIN
-task_router.template_folder = Config.TEMPLATE_FOLDER_MAIN
 
 @app.shell_context_processor
 def make_shell_context():

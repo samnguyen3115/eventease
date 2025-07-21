@@ -2,11 +2,7 @@
 body {
   font-family: "Segoe UI Variable", "Segoe UI", Tahoma, Geneva, Verdana,
     sans-serif;
-  background: linear-gradient(
-    145deg,
-    #dedddd,
-    #54acf4
-  ); /* Fluent Design gradient background */
+  background: white; /* Fluent Design gradient background */
   background-attachment: fixed;
   background-repeat: no-repeat;
   background-size: cover;
@@ -30,22 +26,83 @@ body {
   overflow: hidden;
   background: white; /* Semi-transparent background */
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
-  backdrop-filter: blur(20px); /* Frosted glass effect */
-  -webkit-backdrop-filter: blur(20px); /* Frosted glass effect for Safari */
-  border: 1px solid rgba(255, 255, 255, 0.3); /* Light border for contrast */
+  border: 2px solid black;
 }
 
 /* Chat Header with Fluent Design */
 #chat-header {
-  background: rgb(139, 182, 255); /* Semi-transparent blue */
+  background: rgb(0, 0, 0); /* Semi-transparent blue */
   color: rgb(255, 255, 255);
   text-align: center;
   font-size: 20px;
   padding: 5px;
-  border-bottom: 1px solid rgba(77, 76, 76, 0.3); /* Light border for separation */
-  text-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.2); /* Subtle text shadow */
 }
+/* Chat Container with Fluent Design */
+#chat-container {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  backdrop-filter: blur(10px); /* Frosted glass effect */
+  -webkit-backdrop-filter: blur(10px); /* Frosted glass effect for Safari */
+}
+/* Input Container with Fluent Design */
+#input-container {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-top: 2px solid black; /* Light border for separation */
+  background: #ffffff; /* Semi-transparent background */
+  backdrop-filter: blur(10px); /* Frosted glass effect */
+  -webkit-backdrop-filter: blur(10px); /* Frosted glass effect for Safari */
+}
+
+/* Chat Input Field */
+#chat-input {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid black; /* Light border */
+  border-radius: 5px;
+  font-size: 16px;
+  background: #f4f4f4; /* Semi-transparent background */
+  color: black;
+  backdrop-filter: blur(5px); /* Subtle blur for input */
+  -webkit-backdrop-filter: blur(5px); /* Subtle blur for Safari */
+  margin-right: 10px;
+}
+
+/* Chat Send Button */
+#chat-send-button {
+  padding: 10px 20px;
+  background: black; /* Semi-transparent blue */
+  color: white;
+  border: 2px solid black; /* Light border */
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#chat-send-button:hover {
+  transform: scale(1.05); /* Slight zoom effect */
+}
+
+/* Scrollbar Styling */
+#chat-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+#chat-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+#chat-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
 .modal {
   position: fixed;
   overflow: auto;
@@ -72,19 +129,6 @@ body {
 .modal-footer {
   border-top: 1px solid #dee2e6;
 }
-/* Chat Container with Fluent Design */
-#chat-container {
-  flex: 1;
-  padding: 15px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle inner shadow */
-  backdrop-filter: blur(10px); /* Frosted glass effect */
-  -webkit-backdrop-filter: blur(10px); /* Frosted glass effect for Safari */
-  border: 1px solid rgba(255, 255, 255, 0.2); /* Light border for contrast */
-}
 
 /* Message Bubbles */
 .message {
@@ -101,8 +145,8 @@ body {
 
 .message.user {
   align-self: flex-end;
-  background: #b9e7fd; /* Semi-transparent blue */
-  color: black;
+  background: #000000; /* Semi-transparent blue */
+  color: rgb(255, 255, 255);
   text-align: left;
   transform: translateY(0);
 }
@@ -119,62 +163,6 @@ body {
   transform: scale(1.05); /* Slight zoom effect on hover */
 }
 
-/* Input Container with Fluent Design */
-#input-container {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.3); /* Light border for separation */
-  background: #aaacaf; /* Semi-transparent background */
-  backdrop-filter: blur(10px); /* Frosted glass effect */
-  -webkit-backdrop-filter: blur(10px); /* Frosted glass effect for Safari */
-}
-
-/* Chat Input Field */
-#chat-input {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.3); /* Light border */
-  border-radius: 5px;
-  font-size: 16px;
-  background: #f4f4f4; /* Semi-transparent background */
-  color: black;
-  backdrop-filter: blur(5px); /* Subtle blur for input */
-  -webkit-backdrop-filter: blur(5px); /* Subtle blur for Safari */
-  margin-right: 10px;
-}
-
-/* Chat Send Button */
-#chat-send-button {
-  padding: 10px 20px;
-  background: rgba(0, 123, 255, 0.5); /* Semi-transparent blue */
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-#chat-send-button:hover {
-  background: rgba(0, 123, 255, 0.7); /* Slightly darker blue on hover */
-  transform: scale(1.05); /* Slight zoom effect */
-}
-
-/* Scrollbar Styling */
-#chat-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-#chat-container::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-}
-
-#chat-container::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.5);
-}
-
 /* Event Grid */
 .event-grid {
   display: grid;
@@ -189,8 +177,8 @@ body {
 
 /* Event Card */
 .event-card {
-  background-color: #ffffff;
-  border: 1px solid #ddd;
+  background-color: white;
+  border: 1px solid black;
   border-radius: 10px;
   padding: 15px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -267,7 +255,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); 
+  background-color: rgba(0, 0, 0, 0.65);
   z-index: 1000; /* Ensure it floats above everything */
   justify-content: center;
   align-items: center;
@@ -275,33 +263,19 @@ body {
 
 /* Modal Content */
 .modal-content {
-  background-color: rgb(41, 44, 45);
+  background-color: rgb(255, 255, 255);
   border-radius: 10px;
+  border: 3px solid black; /* Light border */
   padding: 20px;
   width: 90%; /* Takes up most of the screen width */
   max-width: 800px; /* Maximum width for the expanded card */
   height: 60%; /* Makes the modal a horizontal rectangle */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
-/* Close Button */
-.close-button {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-  cursor: pointer;
-}
-
-.close-button:hover {
-  color: #007bff;
-}
 
 /* Tasks Section */
 .tasks-title {
@@ -325,15 +299,14 @@ body {
   margin-bottom: 15px;
   padding: 10px;
   transition: box-shadow 0.3s ease;
-  border-radius: 2px;
+  border-radius: 6px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-
+  border: 1.5px solid black; 
 }
 
 .task-item:hover {
-  background-color: rgb(233, 238, 243);
+  background-color: rgb(243, 243, 243);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-
 }
 
 /* Task Label */
@@ -347,14 +320,20 @@ body {
 .task-label input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  accent-color: #147ded; /* Green color for the checkbox */
+  accent-color: #000000; /* Green color for the checkbox */
   cursor: pointer;
 }
+.task-details {
+  display: flex;
+  flex-direction: column; /* Stack children vertically */
+  align-items: flex-start; /* Align items to the left */
+}
+
 
 /* Task Text */
 .task-text {
-  font-size: 14px;
-  color: #333;
+  font-size: 22px;
+  color: #000000;
   transition: color 0.3s ease, text-decoration 0.3s ease, opacity 0.3s ease;
 }
 
@@ -363,19 +342,6 @@ body {
   color: #888;
   opacity: 0.6;
 }
-
-/* Task Metadata */
-.task-status {
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.task-priority,
-.task-due-date {
-  font-size: 12px;
-  color: #888;
-}
-
 /* Buttons */
 .view-details-button,
 .update-button {
@@ -401,6 +367,7 @@ body {
 .progress-bar-container {
   margin-bottom: 15px; /* Add spacing below the progress bar */
   text-align: center;
+  border-radius: 5px;
 }
 
 /* Progress Bar */
@@ -408,6 +375,7 @@ body {
   width: 100%;
   height: 10px;
   background-color: #f3f3f3;
+  border: 1px solid black; /* Light border for the container */
   border-radius: 5px;
   overflow: hidden;
   position: relative;
@@ -415,8 +383,8 @@ body {
 
 .progress-bar-fill {
   height: 100%;
-  background-color: #098bf6;
-  transition: width 0.3s ease;
+  background-color: #000000;
+  transition: none;
 }
 
 /* Progress Text */
@@ -437,34 +405,31 @@ body {
 
 /* Navbar Styling */
 .navbar {
-  background: linear-gradient(123deg,#52befc,#e2f8fe) !important; /* Blue background */
-  height:fit-content;
+  background: black !important; /* Blue background */
+  height: fit-content;
   position: fixed;
   top: 0;
   z-index: 1000;
 }
 
 .navbar .navbar-brand {
-  color: black !important; /* White text for the brand */
+  color: white !important; /* White text for the brand */
   align-items: center;
   font-weight: bold;
   font-size: 1.5rem;
+  font-family: 'Norwester', sans-serif; /* Apply Norwester font */
 }
 
+
 .navbar .navbar-brand:hover {
-  color: black !important; /* Light blue on hover */
+  color: white !important; /* Light blue on hover */
   text-decoration: none;
 }
 
 .navbar .nav-link {
-  color: black !important; /* White text for links */
+  color: white !important; /* White text for links */
   font-size: 1rem;
   margin-right: 10px;
-}
-
-.navbar .nav-link:hover {
-  color: #00153a !important; /* Light blue on hover */
-  text-decoration: none;
 }
 
 .navbar .navbar-toggler {
@@ -477,7 +442,6 @@ body {
 
 .navbar .nav-item .active {
   font-weight: bold;
-  text-decoration: underline;
 }
 
 /* Center the delete button */
@@ -491,13 +455,16 @@ body {
   padding: 10px 20px;
   font-size: 16px;
   border-radius: 5px;
-  background: rgba(255, 14, 14, 0.5); /* Semi-transparent blue */
+  border: 2px solid rgb(255, 53, 53);
+  background: rgba(255, 255, 255, 0.5); /* Semi-transparent blue */
   color: rgb(2, 2, 2);
   text-align: center;
   text-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.2);
 }
-
-
+.delete-form .btn:hover {
+  background: rgba(255, 14, 14, 0.5); /* Slightly darker blue on hover */
+  transform: scale(1.05); /* Slight zoom effect */
+}
 
 .assign-user-input {
   flex: 1;
@@ -535,6 +502,10 @@ body {
 .form-control::placeholder {
   color: #aaa; /* Light gray or any color you like */
   opacity: 1;
+  background-color: white;
+}
+.form-control{
+  border:2px solid black;
 }
 .fluent-checkbox-group {
   display: flex;
@@ -546,20 +517,20 @@ body {
 .fluent-checkbox-wrapper {
   display: flex;
   align-items: center;
-  background-color: #f6f6f6;
+  background-color: #ffffff;
   color: black;
   padding: 8px 12px;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  border: 2px solid black;
   transition: background-color 0.2s ease;
 }
 
 .fluent-checkbox-wrapper:hover {
-  background-color: #000000;
+  scale: 1.1;
 }
 
 .fluent-checkbox {
-  accent-color: #0078d4; /* Fluent Blue */
+  accent-color: #000000; 
   transform: scale(1.2);
   margin-right: 10px;
   cursor: pointer;
@@ -578,9 +549,11 @@ body {
   gap: 10px;
 }
 
-.assign-btn {
-  background-color: #0078d4;
-  border: none;
+
+.task-btn {
+  background-color: #ffffff;
+  color:rgb(0, 0, 0);
+  border: 2px solid black;
   padding: 6px 10px;
   display: flex;
   align-items: center;
@@ -588,8 +561,60 @@ body {
   border-radius: 6px;
   cursor: pointer;
   flex-wrap: wrap;
+  max-width: 100%;
+}
+.task-btn:hover {
+  background-color: rgb(0, 0, 0);
+  color: white;
+  scale: 1.1;
+}
+.close-btn {
+  background-color: #000000;
+  color:rgb(255, 255, 255);
+  border: 2px solid black;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.close-btn:hover {
+  scale: 1.1;
+}
+#delete-btn:hover {
+  background-color: rgb(255, 22, 22);
+  border: 1px solid red;
+  color: white;
+  scale: 1.1;
+}
+#delete-img:hover{
+  filter:invert(0);
 }
 
+.img-btn:hover {
+filter:invert(1);
+}
+
+.submit-btn {
+  background-color: #ffffff;
+  color:rgb(5, 5, 5);
+  border: 2px solid black;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.submit-btn:hover {
+  scale: 1.1;
+}
 .user-icon-container {
   position: relative;
   width: 32px;
@@ -637,15 +662,10 @@ body {
 }
 
 .edit-task-btn {
-  background-color: #0078d4;
-  border: none;
+  background-color: #fcfeff;
+  border: 2px solid black;
   padding: 5px 10px;
   border-radius: 6px;
-}
-.assign-btn:hover,
-.edit-task-btn:hover {
-  background-color: #0078d4 !important; /* Keeps it the same on hover */
-  color: white; /* Optional: ensure text stays white */
 }
 
 
@@ -665,16 +685,6 @@ body {
   flex-grow: 1;
   gap: 10px;
   margin-top: 10px;
-}
-
-/* Style for the Assign User button */
-.assign-btn {
-  background-color: rgb(250, 250, 251);
-  color: rgb(0, 0, 0);
-  border: 1px solid #ddd;
-  padding: 5px 10px;
-  cursor: pointer;
-  text-align: center;
 }
 
 /* Style for user icons */
@@ -698,29 +708,22 @@ body {
 /* Responsive layout for smaller screens */
 @media (max-width: 768px) {
   .task-item {
-      flex-direction: column;
-      align-items: flex-start;
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .task-buttons {
-      flex-direction: column;
-      width: 100%;
+    flex-direction: column;
+    width: 100%;
   }
 
-  .assign-btn {
-      width: 100%;
-  }
-  .assign-btn,
-  .edit-task-btn {
-    padding: 4px 8px; /* Reduce padding */
-    font-size: 12px; /* Reduce font size */
-  }
+  
 
-  .fluent-button{
+  .fluent-button {
     height: 40px;
     width: 40px;
   }
-  .fluent-button img{
+  .fluent-button img {
     height: 20px;
   }
 }
@@ -731,7 +734,7 @@ body {
   right: 20px;
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, rgba(82, 191, 252, 0.7), rgba(49, 238, 251, 0.7));
+  background: black;
   color: white;
   font-size: 28px;
   text-align: center;
@@ -743,7 +746,7 @@ body {
   text-decoration: none;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgb(255, 255, 255);
   transition: transform 0.2s ease;
   display: flex;
   align-items: center;
@@ -761,14 +764,26 @@ body {
   margin-left: 10px;
 }
 
-/* Hide the default checkbox */
 .switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-/* The slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 25px;
+  margin-left: 10px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
 .slider {
   position: absolute;
   cursor: pointer;
@@ -776,29 +791,47 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
   transition: 0.4s;
   border-radius: 25px;
+  border: 1px solid black; /* Light border for the slider track */
 }
 
-/* The slider when checked */
 .slider:before {
   position: absolute;
   content: "";
   height: 19px;
   width: 19px;
   left: 3px;
-  bottom: 3px;
-  background-color: white;
+  bottom: 2.5px;
+  background-color: rgb(206, 206, 206); /* White handle */
   transition: 0.4s;
   border-radius: 50%;
+  border: 1px solid black; /* Light border for the slider track */
 }
 
-/* When the checkbox is checked */
 input:checked + .slider {
-  background-color: #2196F3;
+  background-color: black; /* Black slider track when checked */
 }
 
 input:checked + .slider:before {
   transform: translateX(25px);
+}
+
+.dropdown-item{
+  border-top: 1px solid black; /* Light border for the dropdown divider */
+  margin: 0.5rem 0; /* Add spacing above and below the divider */
+}
+.dropdown-menu {
+  background-color: white; /* White background for the dropdown */
+  border-radius: 8px; /* Rounded corners for the dropdown */
+  border: 2px solid black;
+  padding: 10px; /* Padding inside the dropdown */
+}
+
+#waveform {
+  width: 100%;
+  height: 200px;
+  background: #f5f5f5;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }

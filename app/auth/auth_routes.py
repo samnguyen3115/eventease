@@ -17,7 +17,6 @@ def register():
         user.set_password(rform.password.data)
         db.session.add(user)
         db.session.commit()
-        flash("Congratulation, you are now registered")
         return redirect(url_for('main.index'))
 
     return render_template('register.html',form = rform)
@@ -28,14 +27,13 @@ def login():
         return redirect(url_for('main.index'))
     lform = LoginForm()
     if lform.validate_on_submit():
-        query = sqla.select(User).where(User.username == lform.username.data)
+        query = sqla.select(User).where(User.email == lform.email.data)
         user = db.session.scalars(query).first()
         if user is None or not user.check_password(lform.password.data):
             flash('Invalid username or password')
             return redirect(url_for('auth.login'))
         
         login_user(user, remember=lform.remember_me.data)     
-        flash(f'The user {current_user.username} has successfully logged in! Authenticated: {current_user.is_authenticated}',"flash-container")
         return redirect(url_for('main.index'))
 
     return render_template('login.html', form=lform)

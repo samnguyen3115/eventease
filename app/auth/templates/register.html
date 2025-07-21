@@ -1,14 +1,89 @@
 {% extends "base.html" %}
-{% import 'bootstrap_wtf.html' as wtf %}
 
 {% block content %}
-<h1> Register</h1>
-<form action ="{{url_for('auth.register')}}" method = "POST">
-    {{ form.hidden_tag()}}
-    {{wtf.form_field(form.username)}}
-    {{wtf.form_field(form.email)}}
-    {{wtf.form_field(form.password)}}
-    {{wtf.form_field(form.password2)}}
-    {{wtf.form_field(form.submit)}}
+<h1 class="text-center">Register</h1>
+<form action="{{ url_for('auth.register') }}" method="POST">
+    {{ form.hidden_tag() }}
+
+    <!-- Username Field -->
+    <div class="form-group">
+        <label for="username">{{ form.username.label }}</label>
+        {{ form.username(class="form-control", placeholder="Enter your username") }}
+    </div>
+
+    <!-- Email Field -->
+    <div class="form-group">
+        <label for="email">{{ form.email.label }}</label>
+        {{ form.email(class="form-control", placeholder="Enter your email") }}
+    </div>
+
+    <!-- Password Field -->
+    <div class="form-group">
+        <label for="password">{{ form.password.label }}</label>
+        {{ form.password(class="form-control", placeholder="Enter your password") }}
+    </div>
+
+    <!-- Confirm Password Field -->
+    <div class="form-group">
+        <label for="password2">{{ form.password2.label }}</label>
+        {{ form.password2(class="form-control", placeholder="Confirm your password") }}
+    </div>
+
+    <!-- Submit Button -->
+    <div class="form-group text-center">
+        {{ form.submit(class="btn btn-custom") }}
+    </div>
 </form>
+
+<!-- Already Registered Link -->
+<div class="text-center mt-3">
+    <p>Already have an account? <a href="{{ url_for('auth.login') }}" class="new-user-link">Sign in here!</a></p>
+</div>
+
+<style>
+
+    /* Style for the input fields */
+    input.form-control {
+        background-color: #ffffff; /* White background */
+        margin-bottom: 10px;
+        color: #000000; /* Black text */
+        border: 2px solid #000000; /* Black border */
+        border-radius: 5px; /* Rounded corners */
+        padding: 10px; /* Add padding inside the input box */
+        font-size: 16px; /* Increase font size */
+    }
+
+    input.form-control:focus {
+        background-color: #f8f9fa; /* Light gray when focused */
+        border-color: #007bff; /* Blue border when focused */
+        outline: none; /* Remove default outline */
+    }
+
+    /* Style for the submit button */
+    .btn-custom {
+        margin-top: 20px;
+        background-color: #000000; /* Blue background */
+        color: #ffffff; /* White text */
+        border-radius: 5px; /* Rounded corners */
+        padding: 10px 20px; /* Add padding */
+        font-size: 18px; /* Larger font size */
+        transition: background-color 0.3s, border-color 0.3s; /* Smooth transition */
+    }
+
+    .btn-custom:hover {
+        background-color: #000000; /* Darker blue on hover */
+        transform: scale(1.1);
+    }
+
+    /* Style for the "Already Registered?" link */
+    .new-user-link {
+        color: #000000; /* Blue text */
+        text-decoration: none; /* Remove underline */
+        font-weight: bold;
+    }
+
+    .new-user-link:hover {
+        text-decoration: underline; /* Add underline on hover */
+    }
+</style>
 {% endblock %}

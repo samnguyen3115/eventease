@@ -1,7 +1,7 @@
 import json
 import re
 from tkinter import Image
-from flask import Response, render_template, request, jsonify, flash, redirect, url_for
+from flask import Response, render_template, request, jsonify, flash, redirect, send_file, url_for
 from flask_login import login_required
 import google.generativeai as genai
 import os
@@ -10,19 +10,22 @@ from ics import Event as IcsEvent
 from app import db
 from flask_login import current_user
 from app.main.models import Event, Task, User, event_participants
-from app.main import main_blueprint as bp_main
 import sqlalchemy as sqla
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 from app.main.forms import ProfileForm
 from flask import current_app
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 from ultralytics import YOLO
-from PIL import Image # type: ignore
-import numpy as np
+from PIL import Image  # type: ignore
 from io import BytesIO
-from transformers import BlipProcessor, BlipForConditionalGeneration
-
+from transformers import BlipProcessor, BlipForConditionalGeneration, CLIPModel, CLIPProcessor
+from flask import current_app
+from deep_translator import GoogleTranslator
+from google.cloud import texttospeech
+import tempfile
+# Access the models
+from app.main import main_blueprint as bp_main
 
 
 UPLOAD_FOLDER = 'static/profile_pics'  # Define where images should be stored
@@ -38,9 +41,9 @@ def allowed_file(filename):
 @bp_main.route('/', methods=['GET'])
 def root():
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))  
+        return redirect(url_for('main.index'))
     else:
-        return redirect(url_for('main.chatbot')) 
+        return redirect(url_for('main.chatbot'))
 
 
 @bp_main.route('/index', methods=['GET', 'POST'])
@@ -68,8 +71,7 @@ def index():
     for event in all_events:
         total_tasks = len(event.tasks)
         completed_tasks = len([task for task in event.tasks if task.completed])
-        event.progress = (completed_tasks / total_tasks *
-                          100) if total_tasks > 0 else 0
+        event.progress = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
 
     return render_template('index.html', events=all_events)
 
@@ -78,29 +80,46 @@ def index():
 def chatbot():
     return render_template('chatbot.html', title="Event Chatbot")
 
+@bp_main.route('/voicebot', methods=['GET', 'POST'])
+def voicebot():
+    return render_template('voicebot.html', title="Event VoiceBot")
+
 
 @bp_main.route('/create_event', methods=['POST'])
 @login_required
 def create_event():
     data = request.json
     event_name = data.get('eventName')
+    event_date = data.get('eventDate')  # Optional field
+    event_description = data.get('eventDescription')  # Optional field
     user_id = current_user.id
 
     if not event_name:
         return jsonify({"error": "Event name is required."}), 400
 
-    new_event = Event(name=event_name, user_id=user_id)
+    new_event = Event(
+        name=event_name,
+        user_id=user_id,
+        strict_mode=False  # Default to False
+    )
+    if event_date:
+        new_event.date = datetime.strptime(event_date, '%Y-%m-%d')
+    if event_description:
+        new_event.description = event_description
     db.session.add(new_event)
     db.session.commit()
+
     # Add the current user as a participant
     new_event.participants.append(current_user)
     db.session.commit()
+
     return jsonify({"eventId": new_event.id})
 
 
 @bp_main.route('/create_event_and_tasks', methods=['POST'])
 @login_required
 def create_event_and_tasks():
+
     data = request.json
     user_input = data.get('userInput')
     event_id = data.get('event_id')
@@ -114,7 +133,7 @@ def create_event_and_tasks():
     try:
         if not conversation_history:
             # Initial prompt, ask the first clarifying question
-             prompt = f"""
+            prompt = f"""
         Based on the following event description: "{user_input}", ask ONE clarifying question that will help create a more specific checklist.
         Do not ask about things already mentioned in "{user_input}".
         Return ONLY the question.
@@ -128,6 +147,7 @@ def create_event_and_tasks():
         Ask the user what aspect of the event they want to prioritize most (e.g., fun, efficiency, preparation, safety, etc...).\
         Create the list of aspect based on their event, not the template. You can guess with "{event.name}".
         Format your response with just the question and a short list of example options. 
+        Format the list into just a normal list, not a markdown list.
         Do not ask about things already mentioned in the chat: {conversation_history}
         """
             else:
@@ -148,7 +168,7 @@ def create_event_and_tasks():
         
         Return ONLY the JSON. No explanations. No markdown. Just pure JSON like:
         [
-            {{"task": "Book hotel", "priority": 1, "due_date": "2023-10-01", "item": "none"}},
+            {{"task": "Book hotel", "priority": 1, "item": "none"}},
             {{"task": "Pack sunscreen", "priority": 2, "item": "sunscreen"}},
             {{"task": "Buy snacks", "priority": 3, "item": "snacks"}}
         ]
@@ -193,6 +213,7 @@ def create_event_and_tasks():
 
 @bp_main.route('/chat', methods=['POST'])
 def chat():
+
     data = request.json
     user_input = data.get('message')
     event_id = data.get('event_id')
@@ -313,26 +334,11 @@ def checklist_detail(event_id):
             event_participants.c.event_id == event_id)
     ).all()
     current_date = datetime.today()
-    print("Retrieved Users:", users)
+    friends = current_user.friends.all()  # Fetch the user's friends
+    
+    assigned_friend_ids = [int(friend.id) for friend in event.participants]
     # Render the checklist.html template with the event and tasks
-    return render_template('checklist.html', event=event, tasks=tasks, users=users, current_date=current_date,strict_mode=event.strict_mode)
-
-
-@bp_main.route('/get_event/<int:event_id>')
-@login_required
-def get_event(event_id):
-    # Get the event
-    event = db.session.get(Event, event_id)
-    if not event:
-        return "Event not found", 404
-
-    # Fetch tasks sorted by priority
-    tasks = db.session.scalars(
-        sqla.select(Task).where(Task.event_id ==
-                                event_id).order_by(Task.priority.asc())
-    ).all()
-
-    return render_template('checklist.html', event=event, tasks=tasks)
+    return render_template('checklist.html', event=event, tasks=tasks, users=users, current_date=current_date, strict_mode=event.strict_mode,friends=friends,assigned_friend_ids=assigned_friend_ids)
 
 
 @bp_main.route('/update_task/<int:task_id>', methods=['POST'])
@@ -350,20 +356,6 @@ def update_task(task_id):
     db.session.commit()
 
     return jsonify({"success": True})
-
-
-@bp_main.route('/get_event_progress/<int:event_id>')
-@login_required
-def get_event_progress(event_id):
-    event = db.session.get(Event, event_id)
-    if not event:
-        return jsonify({"error": "Event not found"}), 404
-
-    total_tasks = len(event.tasks)
-    completed_tasks = len([task for task in event.tasks if task.completed])
-    progress = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
-
-    return jsonify({"progress": progress})
 
 
 @bp_main.route('/update_event_name/<int:event_id>', methods=['POST'])
@@ -415,6 +407,14 @@ def delete_event(event_id):
     tasks = db.session.scalars(sqla.select(
         Task).where(Task.event_id == event_id)).all()
     for task in tasks:
+        if task.image_link:
+            image_path = os.path.join(current_app.static_folder, task.image_link)
+            if os.path.exists(image_path):
+                try:
+                    os.remove(image_path)
+                    print(f"Deleted image: {image_path}")  # Debugging log
+                except Exception as e:
+                    print(f"Error deleting image: {e}")  # Debugging log
         db.session.delete(task)
 
     # Delete the event
@@ -427,12 +427,25 @@ def delete_event(event_id):
 @bp_main.route('/delete_task/<int:task_id>', methods=['POST', 'DELETE'])
 @login_required
 def delete_task(task_id):
-    # Find the task and delete it
+    # Find the task
     task = db.session.get(Task, task_id)
     if not task:
         return jsonify({"error": "Task not found"}), 404
+
+    # Delete the associated image file if it exists
+    if task.image_link:
+        image_path = os.path.join(current_app.static_folder, task.image_link)
+        if os.path.exists(image_path):
+            try:
+                os.remove(image_path)
+                print(f"Deleted image: {image_path}")  # Debugging log
+            except Exception as e:
+                print(f"Error deleting image: {e}")  # Debugging log
+
+    # Delete the task
     db.session.delete(task)
     db.session.commit()
+
     flash('The task has been successfully deleted.')
     return redirect(url_for('main.checklist_detail', event_id=task.event_id))
 
@@ -445,12 +458,14 @@ def edit_task(task_id):
 
     if not task:
         return jsonify({"success": False, "error": "Task not found"}), 404
-    
+
     task.description = data.get('description', task.description)
+    task.note = data.get('note', task.note) 
     task.priority = data.get('priority', task.priority)
-    print (data.get('due_date'))
+    print(data.get('due_date'))
     if data.get('due_date'):
-        task.due_date = data.get('due_date', task.due_date)  # Update the due date
+        task.due_date = data.get(
+            'due_date', task.due_date)  # Update the due date
     if data.get('item'):
         task.item = data.get('item', task.item)  # Update the item
     else:
@@ -464,9 +479,10 @@ def edit_task(task_id):
 def add_task():
     data = request.get_json()
     description = data.get('description')
-    item = data.get('item')  # Get the item
+    note = data.get('note') 
+    item = data.get('item') 
     priority = data.get('priority')
-    due_date = data.get('due_date')  # Get the due date
+    due_date = data.get('due_date')  
     event_id = data.get('event_id')
 
     if not description or not event_id:
@@ -475,11 +491,12 @@ def add_task():
     # Create a new task
     new_task = Task(
         description=description,
+        note=note, 
         priority=priority,
         event_id=event_id,
         completed=False
     )
-    if(due_date):
+    if (due_date):
         new_task.due_date = datetime.strptime(due_date, '%Y-%m-%d')
     if item:
         new_task.item = item
@@ -489,34 +506,31 @@ def add_task():
     return jsonify({"success": True, "message": "Task added successfully"})
 
 
-@bp_main.route('/assign_user_to_event/<int:event_id>', methods=['POST'])
+@bp_main.route('/update_event_participants/<int:event_id>', methods=['POST'])
 @login_required
-def assign_user_to_event(event_id):
+def update_event_participants(event_id):
     data = request.get_json()
-    user_email = data.get('user_email')
+    add_ids = data.get('add', [])
+    remove_ids = data.get('remove', [])
 
-    if not user_email:
-        return jsonify({"success": False, "error": "User email is required."}), 400
-
-    # Find the user by email
-    user = db.session.scalar(sqla.select(User).where(User.email == user_email))
-    if not user:
-        return jsonify({"success": False, "error": "User not found."}), 404
-
-    # Find the event
-    event = db.session.scalar(sqla.select(Event).where(Event.id == event_id))
+    event = db.session.get(Event, event_id)
     if not event:
         return jsonify({"success": False, "error": "Event not found."}), 404
 
-    # Check if the user is already assigned to the event
-    if user in event.participants:
-        return jsonify({"success": False, "error": "User is already assigned to this event."}), 400
+    # Add users to the event
+    for friend_id in add_ids:
+        friend = db.session.get(User, friend_id)
+        if friend and friend in current_user.friends and friend not in event.participants:
+            event.participants.append(friend)
 
-    # Assign the user to the event
-    event.participants.append(user)
+    # Remove users from the event
+    for friend_id in remove_ids:
+        friend = db.session.get(User, friend_id)
+        if friend and friend in event.participants:
+            event.participants.remove(friend)
+
     db.session.commit()
-
-    return jsonify({"success": True, "message": f"User {user.email} assigned to event {event.name}."})
+    return jsonify({"success": True, "message": "Event participants updated successfully."})
 
 
 @bp_main.route('/assign_users_to_task/<int:task_id>', methods=['POST'])
@@ -549,25 +563,6 @@ def assign_users_to_task(task_id):
         return jsonify({"error": "An error occurred while assigning users to the task."}), 500
 
 
-@bp_main.route('/upload_profile_pic', methods=['POST'])
-def upload_profile_pic():
-    if 'file' not in request.files:
-        return "No file part", 400
-    file = request.files['file']
-    if file.filename == '':
-        return "No selected file", 400
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(file_path)
-
-        # Save the filename to the user's profile picture field
-        current_user.profile_picture = file_path
-        db.session.commit()
-
-        return f"Profile picture updated to {filename}", 200
-
-
 @bp_main.route('/display_profile', methods=['GET'])
 @login_required
 def display_profile():
@@ -594,6 +589,7 @@ def edit_profile():
         # Update other fields
         current_user.username = form.username.data
         current_user.email = form.email.data
+        current_user.language = form.language.data
         db.session.commit()
 
         flash("Profile updated successfully!", "success")
@@ -602,47 +598,49 @@ def edit_profile():
     # Render the edit profile form for GET requests
     return render_template('edit_profile.html', form=form, user=current_user)
 
-@bp_main.route('/calender.ics', methods=['GET'])
-def calender_feed():
-    token = request.args.get('token')
-    if token != "your_secure_token":
-        return "Unauthorized", 401
-    # Fetch tasks assigned to the current user
-    tasks = db.session.scalars(
-        sqla.select(Task).where(Task.assigned_users.any(User.id == current_user.id))
-    ).all()
 
-    calendar = Calendar()  # Create a new calendar
+@bp_main.route('/calendar.ics', methods=['GET'])
+@login_required
+def calendar_feed():
+    try:
+        # Fetch tasks assigned to the current user
+        tasks = db.session.scalars(
+            sqla.select(Task).where(
+                Task.assigned_users.any(User.id == current_user.id))
+        ).all()
 
-    for task in tasks:
-        if task.due_date is not None:
-            # Create an event for each task
-            e = IcsEvent()
-            e.name = task.description  # Set the name of the event
-            e.begin = task.due_date  # Set the start time of the event
-            e.end = task.due_date + timedelta(days=1)  # Set the end time (1 day duration)
-            e.priority = task.priority  # Add priority (customize as needed)
-            e.description = task.event.name if task.event else 'No Event Description'  # Add description
+        calendar = Calendar()  # Create a new calendar
 
-            calendar.events.add(e)  # Add the event to the calendar
-                # Return the calendar feed as a response
-    return Response(str(calendar), mimetype="text/calendar")
+        for task in tasks:
+            if task.due_date is not None:
+                # Create an event for each task
+                e = IcsEvent()
+                e.name = task.description  # Set the name of the event
+                e.begin = task.due_date  # Set the start time of the event
+                # Set the end time (1 day duration)
+                e.end = task.due_date + timedelta(days=1)
+                # Add priority (customize as needed)
+                e.priority = task.priority
+                e.description = task.event.name if task.event else 'No Event Description'  # Add description
 
-# Load the BLIP model and processor
-blip_processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
-blip_model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
+                calendar.events.add(e)  # Add the event to the calendar
 
+        # Return the calendar feed as a downloadable response
+        response = Response(str(calendar), mimetype="text/calendar")
+        response.headers["Content-Disposition"] = "attachment; filename=calendar.ics"
+        return response
+
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+
+blip_processor = BlipProcessor.from_pretrained(
+    "Salesforce/blip-image-captioning-base", use_fast=True)
+blip_model = BlipForConditionalGeneration.from_pretrained(
+    "Salesforce/blip-image-captioning-base")
 @bp_main.route('/complete_task_with_image/<int:task_id>', methods=['POST'])
 @login_required
 def complete_task_with_image(task_id):
-    if 'file' not in request.files:
-        return jsonify({"error": "No file part"}), 400
-
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
-
-    # Fetch the task
     task = db.session.get(Task, task_id)
     if not task:
         return jsonify({"error": "Task not found"}), 404
@@ -650,22 +648,35 @@ def complete_task_with_image(task_id):
     if not task.item:
         return jsonify({"error": "This task does not require an item to be verified."}), 400
 
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+
+    file = request.files['file']
+         
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+
     try:
         # Validate the uploaded file as an image
-        file_stream = BytesIO(file.read())
+        original_file_bytes = file.read()
+        file_stream_for_blip = BytesIO(original_file_bytes)
+        file_stream_for_save = BytesIO(original_file_bytes)
         try:
-            img = Image.open(file_stream)
+            img = Image.open(file_stream_for_blip)
             img.verify()  # Verify that the file is a valid image
         except Exception:
             return jsonify({"error": "The uploaded file is not a valid image."}), 400
 
         # Reload the image for BLIP processing
-        file_stream.seek(0)  # Reset the stream position to the beginning
-        img = Image.open(file_stream).convert('RGB')  # Ensure the image is in RGB format
+        file_stream_for_blip.seek(0)  # Reset the stream position to the beginning
+        img = Image.open(file_stream_for_blip).convert('RGB')  # Ensure the image is in RGB format
+        max_size = (512, 512)
+        img.thumbnail(max_size, Image.Resampling.LANCZOS)
 
         # Generate a caption using BLIP
         inputs = blip_processor(images=img, return_tensors="pt")
-        outputs = blip_model.generate(**inputs)
+        outputs = blip_model.generate(**inputs, max_length=50, num_beams=5)
         caption = blip_processor.decode(outputs[0], skip_special_tokens=True)
 
         print(f"Generated caption: {caption}")
@@ -673,31 +684,60 @@ def complete_task_with_image(task_id):
         # Use Google Generative AI to determine if the required item and caption are related
         required_item = task.item.lower()
         prompt = f"""
-        Determine if the following two phrases are related:
-        1. Required item: "{required_item}"
-        2. Caption: "{caption}"
-        Respond with "true" if they are related and "false" if they are not.
+        Analyze if the following image caption likely describes an image is related to the  required item.
+        Required item: "{required_item}"
+        Caption: "{caption}"
+        Try to be easy with this, and don't be too strict.
+        Consider synonyms, context, and partial matches (e.g., 'mug' for 'cup', 'car' in 'parking lot with cars').
+        Respond with 'true' if the item is likely present, 'false' if not,just "true" or "false".
         """
         try:
-            # Use genai.generate_text instead of model.generate_text
             response = model.generate_content(prompt)
             relation = response.text.strip().lower()
+            print(f"Relation response: {relation}")
 
             if relation == "true":
-                # Mark the task as completed
-                task.completed = True
-                db.session.commit()
+                if allowed_file(file.filename):
+                    if task.image_link:
+                        # Delete the old image if it exists
+                        old_image_path = os.path.join(
+                            current_app.static_folder, task.image_link)
+                        if os.path.exists(old_image_path):
+                            try:
+                                os.remove(old_image_path)
+                                print(f"Deleted old image: {old_image_path}")  # Debugging log
+                            except Exception as e:
+                                print(f"Error deleting old image: {e}")
+                    filename = secure_filename(file.filename)
+                    image_folder = os.path.join(current_app.static_folder, 'task_images')
+                    os.makedirs(image_folder, exist_ok=True)  # Create folder if not exists
+                    image_path = os.path.join(image_folder, filename)
+
+                    file_stream_for_save.seek(0)  # Reset before saving
+                    with open(image_path, 'wb') as f:
+                        f.write(file_stream_for_save.read())
+
+            # Update task
+                    task.image_link = f'task_images/{filename}'
+                    task.completed = True
+                    db.session.commit()
+                # Save the image to the filesystem
+                
+                # Mark the task as completed and save the image path
+                print("Item found in the image!")
                 return jsonify({
                     "success": True,
-                    "message": f"Task '{task.description}' completed successfully!",
+                    "message": f"Task completed successfully! Great job!!",
                     "caption": caption,
                     "related": True
                 })
+
             task.completed = False
+            print("Item not found in the image!")
             db.session.commit()
             return jsonify({
                 "success": False,
-                "message": f"The required item '{task.item}' was not found in the image.",
+                "message": f"The required item was not found in the image. Please try again",
                 "caption": caption,
                 "related": False
             }), 400
@@ -707,7 +747,27 @@ def complete_task_with_image(task_id):
 
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
-    
+
+
+@bp_main.route('/bypass_item/<int:task_id>', methods=['POST'])
+@login_required
+def bypass_item(task_id):
+    try:
+        # Fetch the task
+        task = db.session.get(Task, task_id)
+        if not task:
+            return jsonify({"success": False, "error": "Task not found."}), 404
+
+        # Perform the bypass logic (e.g., mark the task as completed or remove the item requirement)
+        task.item = None  # Example: Remove the item requirement
+        task.completed = True  # Optionally mark the task as completed
+        db.session.commit()
+
+        return jsonify({"success": True, "message": "Task bypassed successfully."})
+    except Exception as e:
+        return jsonify({"success": False, "error": f"An error occurred: {str(e)}"}), 500
+
+
 @bp_main.route('/strict_mode/<int:event_id>', methods=['POST'])
 @login_required
 def strict_mode(event_id):
@@ -738,3 +798,187 @@ def strict_mode(event_id):
 
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+    
+    
+@bp_main.route('/add_friend', methods=['POST'])
+@login_required
+def add_friend():
+    try:
+        data = request.get_json()
+        if not data or 'email' not in data:
+            return jsonify({"success": False, "error": "Email is required."}), 400
+
+        friend_email = data.get('email')
+        print(f"Received email: {friend_email}")  # Debugging log
+
+        friend = db.session.scalar(sqla.select(User).where(User.email == friend_email))
+        if not friend:
+            return jsonify({"success": False, "error": "User not found."}), 404
+
+        print(f"Found friend: {friend.username}")  # Debugging log
+
+        if current_user.is_friend(friend):
+            return jsonify({"success": False, "error": "User is already your friend."}), 400
+
+        current_user.add_friend(friend)
+        db.session.commit()
+        print(f"Friend added successfully: {friend.username}")  # Debugging log
+
+        return jsonify({"success": True, "message": f"{friend.username} has been added as a friend."})
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error in add_friend route: {e}")
+        return jsonify({"success": False, "error": f"An internal error occurred: {str(e)}"}), 500
+
+@bp_main.route('/remove_friend', methods=['POST'])
+@login_required
+def remove_friend():
+    data = request.get_json()
+    friend_email = data.get('email')
+
+    friend = db.session.scalar(sqla.select(User).where(User.email == friend_email))
+    if not friend:
+        return jsonify({"success": False, "error": "User not found."}), 404
+
+    if not current_user.is_friend(friend):
+        return jsonify({"success": False, "error": "User is not your friend."}), 400
+
+    current_user.remove_friend(friend)
+    db.session.commit()
+    return jsonify({"success": True, "message": f"{friend.username} has been removed from your friends list."})
+
+
+@bp_main.route('/friends', methods=['GET'])
+@login_required
+def list_friends():
+    friends = current_user.friends.all()
+    return jsonify({
+        "friends": [{"id": friend.id, "username": friend.username, "email": friend.email} for friend in friends]
+    })
+    
+@bp_main.route('/friends', methods=['GET'])
+@login_required
+def get_friends():
+    friends = current_user.friends.all()
+    return jsonify({
+        "friends": [{"id": friend.id, "username": friend.username, "email": friend.email} for friend in friends]
+    })
+    
+@bp_main.route('/edit_event/<int:event_id>', methods=['POST'])
+@login_required
+def edit_event(event_id):
+    data = request.get_json()
+    new_name = data.get('new_event_name')
+    new_date = data.get('new_event_date')
+    new_owner_id = data.get('new_owner_id')
+
+    event = db.session.get(Event, event_id)
+    if not event:
+        return jsonify({"success": False, "error": "Event not found."}), 404
+
+    if current_user.id != event.user_id:
+        return jsonify({"success": False, "error": "Only the current owner can change ownership."}), 403
+
+    new_owner = db.session.get(User, new_owner_id)
+    if not new_owner or new_owner not in event.participants:
+        return jsonify({"success": False, "error": "Selected user is not a participant of the event."}), 400
+
+    # Update the event owner
+    event.user_id = new_owner_id
+    if new_name:
+        event.name = new_name
+    if new_date:
+        event.date = new_date
+    db.session.commit()
+
+    return jsonify({"success": True, "message": "Event ownership changed successfully."})
+
+@bp_main.route('/verify_task/<int:task_id>', methods=['POST'])
+@login_required
+def verify_task(task_id):
+    data = request.get_json()
+    is_verified = data.get('verified')
+    note = data.get('note', '').strip()  # Get the note from the request
+
+    # Fetch the task
+    task = db.session.get(Task, task_id)
+    if not task:
+        return jsonify({"success": False, "error": "Task not found."}), 404
+
+    # Update the task's completion status and note
+    task.completed = is_verified
+    task.note = note
+    db.session.commit()
+
+    if is_verified:
+        message = "Task verified successfully!"
+    else:
+        message = "Task marked as not completed. Note updated."
+
+    return jsonify({"success": True, "message": message})
+
+@bp_main.route('/translate', methods=['POST'])
+def translate_text():
+    data = request.get_json()
+    text = data.get('text', '')
+    target_lang = data.get('target_lang', 'en')
+
+    try:
+        translated = GoogleTranslator(source='auto', target=target_lang).translate(text)
+        return jsonify({'translated_text': translated})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp_main.route('/speak', methods=['POST'])
+def speak():
+    try:
+        data = request.json
+        text = data.get('text', '')
+        lang = data.get('lang', 'en-US')
+
+        if not text:
+            return jsonify({"error": "Text is required"}), 400
+
+        # Log the number of characters used
+        character_count = len(text)
+        print(f"Characters used in this request: {character_count}")
+
+        # Initialize the TTS client
+        client = texttospeech.TextToSpeechClient()
+
+        # Prepare the input text
+        input_text = texttospeech.SynthesisInput(text=text)
+
+        # Configure the voice
+        voice = texttospeech.VoiceSelectionParams(
+            language_code=lang,
+            ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL,
+            name=f"{lang}-Standard-A"  # Customize this if needed
+        )
+
+        # Configure the audio output
+        audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.MP3)
+
+        # Call the TTS API
+        response = client.synthesize_speech(input=input_text, voice=voice, audio_config=audio_config)
+
+        # Save the audio to a temporary file
+        temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+        temp_audio.write(response.audio_content)
+        temp_audio.seek(0)
+
+        # Send the audio file to the client
+        return send_file(temp_audio.name, mimetype='audio/mpeg')
+
+    except Exception as e:
+        print(f"Error in /speak route: {e}")
+        return jsonify({"error": "An error occurred while generating speech"}), 500
+
+    finally:
+        # Clean up temporary files
+        if 'temp_audio' in locals():
+            try:
+                os.unlink(temp_audio.name)
+            except Exception as cleanup_error:
+                print(f"Error cleaning up temporary file: {cleanup_error}")
+    

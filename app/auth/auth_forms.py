@@ -10,7 +10,7 @@ class RegistrationForm(FlaskForm):
     username = StringField('Username',validators= [DataRequired()])
     email = StringField('Email',validators= [DataRequired(),Email()])
     password = PasswordField('Password',validators= [DataRequired()])
-    password2 = PasswordField('Password',validators= [DataRequired(),EqualTo('password')])
+    password2 = PasswordField('Confirm your password',validators= [DataRequired(),EqualTo('password')])
     submit = SubmitField('Post')
     def validate_username(self,username):
         query = sqla.select(User).where(User.username == username.data)
@@ -24,7 +24,7 @@ class RegistrationForm(FlaskForm):
             raise validators.ValidationError('Email is already existed, Please use a different email.')
         
 class LoginForm(FlaskForm):
-    username = StringField('username',validators= [DataRequired()])
+    email = StringField('Email',validators= [DataRequired()])
     password = PasswordField('Password',validators= [DataRequired()])
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Login')

@@ -18,3 +18,7 @@ google-generativeai
 ics
 tensorflow
 pillow
+ultralytics
+transformers
+deep_translator
+google-cloud-texttospeech

@@ -32,7 +32,13 @@
                     <label for="email">Email</label>
                     <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
                 </div>
+                <!--Language-->
+                <div class="form-group mt-3">
+                    <label for="language">Preferred Language:</label>
+                    {{ form.language(class="form-control") }}
+                </div>
 
+                
                 <button type="submit" class="btn btn-success mt-4">Save Changes</button>
                 <a href="{{ url_for('main.display_profile') }}" class="btn btn-secondary mt-4">Cancel</a>
                 

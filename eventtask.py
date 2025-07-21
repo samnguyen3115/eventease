@@ -8,11 +8,13 @@ from app import create_app, db
 from app.main.models import User,Event,Task
 import sqlalchemy as sqla
 import sqlalchemy.orm as sqlo
+from transformers import BlipProcessor, BlipForConditionalGeneration
+from flask import current_app
 
 app = create_app(Config)
 load_dotenv()
-
-
+# Load the BLIP model and processor
+# Push an application context
 @app.shell_context_processor
 def make_shell_context():
     return {'sqla': sqla, 'sqlo': sqlo, 'db': db, 'User': User, 'Event': Event, 'Task': Task}  

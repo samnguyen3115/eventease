@@ -14,20 +14,52 @@
         <div id="input-container">
             <input type="text" id="chat-input" placeholder="Type your message...">
             <button id="chat-send-button">Send</button>
+            
         </div>
     </div>
 
     <script>
-        const isAuthenticated = {{ current_user.is_authenticated | tojson }};
-        console.log(isAuthenticated);
-        const chatContainer = document.getElementById('chat-container');
-        const chatInput = document.getElementById('chat-input');
-        const chatSendButton = document.getElementById('chat-send-button');
-        let eventId = null;
-        let eventCreationMode = isAuthenticated; // Only enable event creation mode if the user is authenticated
-        let conversationHistory = [];
-        let questionIndex = 0;
+    const isAuthenticated = {{ current_user.is_authenticated | tojson }};
+    console.log(isAuthenticated);
+    const chatContainer = document.getElementById('chat-container');
+    const chatInput = document.getElementById('chat-input');
+    const chatSendButton = document.getElementById('chat-send-button');
+    const micButton = document.createElement('button'); // Add a microphone button
+    micButton.textContent = '🎤';
+    micButton.id = 'mic-button';
+    document.getElementById('input-container').appendChild(micButton); // Append the button to the input container
 
+    let eventId = null;
+    let eventCreationMode = isAuthenticated; // Only enable event creation mode if the user is authenticated
+    let conversationHistory = [];
+    let questionIndex = 0;
+
+    function startDictation() {
+        if ('webkitSpeechRecognition' in window) {
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = "en-US";
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                chatInput.value = transcript; // Populate the input field with the transcript
+                appendMessage('You', transcript); // Append the message to the chat
+                chatSendButton.click(); // Automatically send the message
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech recognition error:", event.error);
+                appendMessage('Bot', 'Sorry, I could not understand what you said. Please try again.');
+            };
+
+            recognition.start();
+        } else {
+            alert("Speech recognition is not supported in this browser.");
+        }
+    }
+
+    micButton.addEventListener('click', startDictation);
         function appendMessage(sender, message, isList = false) {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message', sender === 'You' ? 'user' : 'bot');
@@ -71,7 +103,7 @@
                         .then(data => {
                             if (data.eventId) {
                                 eventId = data.eventId;
-                                appendMessage('Bot', `Event '${message}' created! Please provide more details about the event.`);
+                                appendMessage('Bot', `Please provide more details about the event.`);
                             } else if (data.error) {
                                 appendMessage('Bot', `Error: ${data.error}`);
                                 eventCreationMode = false;
@@ -98,6 +130,14 @@
                                 eventCreationMode = false;
                                 conversationHistory = [];
                                 questionIndex = 0;
+                                const redirectButton = document.createElement('button');
+                                redirectButton.textContent = 'Go to Event';
+                                redirectButton.classList.add('redirect-button');
+                                redirectButton.addEventListener('click', () => {
+                                    window.location.href = `/checklist_detail/${eventId}`;
+                                });
+                                chatContainer.appendChild(redirectButton);
+                                chatContainer.scrollTop = chatContainer.scrollHeight;
                             } else if (data.question) {
                                 appendMessage('Bot', data.question);
                                 conversationHistory.push(`User: ${message}`);
@@ -168,7 +208,7 @@
 
         // Initial bot message
         if (isAuthenticated) {
-            appendMessage('Bot', 'Hi, I am a bot that can help you with event planning. What is your event name?');
+            appendMessage('Bot', 'Hi, What is your event name?');
         } else {
             appendMessage('Bot', 'Hi, I am a bot that can help you with event planning. Please provide detail information of what event you wanna do.');
         }

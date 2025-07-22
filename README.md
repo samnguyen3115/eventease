@@ -6,7 +6,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/samnguyen3115/eventease">
-    <img src="src/static/img/eventease.png" alt="Logo" width="80" height="80">
+    <img src="src/static/img/eventease.png" alt="Logo" width="500" height="500">
   </a>
 
 <h3 align="center">EventEase</h3>
